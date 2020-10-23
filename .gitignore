@@ -1,0 +1,5 @@
+bin/*
+.haxelib/*
+redist/*
+*-old*
+*press/*

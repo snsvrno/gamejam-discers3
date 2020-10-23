@@ -1,0 +1,398 @@
+{
+	"sheets": [
+		{
+			"name": "blades",
+			"columns": [
+				{
+					"typeStr": "0",
+					"name": "name",
+					"scope": null
+				},
+				{
+					"typeStr": "14",
+					"name": "sprite"
+				},
+				{
+					"typeStr": "17",
+					"name": "center"
+				},
+				{
+					"typeStr": "17",
+					"name": "radius"
+				},
+				{
+					"typeStr": "8",
+					"name": "animations"
+				}
+			],
+			"lines": [
+				{
+					"name": "base",
+					"animations": [],
+					"center": {
+						"x": 8,
+						"y": 8
+					},
+					"sprite": {
+						"file": "player-disc.png",
+						"size": 16,
+						"x": 0,
+						"y": 0
+					},
+					"radius": {
+						"fleshy": 6,
+						"walls": 7
+					}
+				}
+			],
+			"separators": [],
+			"props": {}
+		},
+		{
+			"name": "backdrops",
+			"columns": [
+				{
+					"typeStr": "0",
+					"name": "name",
+					"scope": null
+				},
+				{
+					"typeStr": "14",
+					"name": "sprite"
+				},
+				{
+					"typeStr": "17",
+					"name": "gameSpace",
+					"opt": true
+				}
+			],
+			"lines": [
+				{
+					"name": "level1",
+					"sprite": {
+						"file": "level1.png",
+						"size": 128,
+						"x": 0,
+						"y": 0
+					},
+					"gameSpace": {
+						"x": 7,
+						"y": 7,
+						"w": 114,
+						"h": 114
+					}
+				}
+			],
+			"separators": [],
+			"props": {}
+		},
+		{
+			"name": "humans",
+			"columns": [
+				{
+					"typeStr": "0",
+					"name": "name",
+					"scope": null
+				},
+				{
+					"typeStr": "14",
+					"name": "sprite"
+				},
+				{
+					"typeStr": "8",
+					"name": "animations"
+				},
+				{
+					"typeStr": "17",
+					"name": "center"
+				},
+				{
+					"typeStr": "17",
+					"name": "radius"
+				}
+			],
+			"lines": [
+				{
+					"name": "simple",
+					"animations": [
+						{
+							"name": "run",
+							"frames": [
+								{
+									"frame": {
+										"file": "human.png",
+										"size": 32,
+										"x": 1,
+										"y": 0
+									}
+								},
+								{
+									"frame": {
+										"file": "human.png",
+										"size": 32,
+										"x": 2,
+										"y": 0
+									}
+								},
+								{
+									"frame": {
+										"file": "human.png",
+										"size": 32,
+										"x": 3,
+										"y": 0
+									}
+								}
+							],
+							"speed": 1
+						},
+						{
+							"name": "walk",
+							"frames": [
+								{
+									"frame": {
+										"file": "human.png",
+										"size": 32,
+										"x": 4,
+										"y": 0
+									}
+								},
+								{
+									"frame": {
+										"file": "human.png",
+										"size": 32,
+										"x": 5,
+										"y": 0
+									}
+								},
+								{
+									"frame": {
+										"file": "human.png",
+										"size": 32,
+										"x": 6,
+										"y": 0
+									}
+								},
+								{
+									"frame": {
+										"file": "human.png",
+										"size": 32,
+										"x": 7,
+										"y": 0
+									}
+								},
+								{
+									"frame": {
+										"file": "human.png",
+										"size": 32,
+										"x": 8,
+										"y": 0
+									}
+								},
+								{
+									"frame": {
+										"file": "human.png",
+										"size": 32,
+										"x": 9,
+										"y": 0
+									}
+								}
+							],
+							"speed": 1
+						}
+					],
+					"center": {
+						"x": 16,
+						"y": 17
+					},
+					"radius": {
+						"fleshy": 3,
+						"wall": 5
+					},
+					"sprite": {
+						"file": "human.png",
+						"size": 32,
+						"x": 0,
+						"y": 0
+					}
+				}
+			],
+			"separators": [],
+			"props": {}
+		},
+		{
+			"name": "humans@animations",
+			"props": {
+				"hide": true
+			},
+			"separators": [],
+			"lines": [],
+			"columns": [
+				{
+					"typeStr": "0",
+					"name": "name",
+					"scope": 1
+				},
+				{
+					"typeStr": "8",
+					"name": "frames"
+				},
+				{
+					"typeStr": "4",
+					"name": "speed"
+				}
+			]
+		},
+		{
+			"name": "humans@animations@frames",
+			"props": {
+				"hide": true
+			},
+			"separators": [],
+			"lines": [],
+			"columns": [
+				{
+					"typeStr": "14",
+					"name": "frame"
+				}
+			]
+		},
+		{
+			"name": "humans@center",
+			"props": {
+				"hide": true,
+				"isProps": true
+			},
+			"separators": [],
+			"lines": [],
+			"columns": [
+				{
+					"typeStr": "3",
+					"name": "x"
+				},
+				{
+					"typeStr": "3",
+					"name": "y"
+				}
+			]
+		},
+		{
+			"name": "humans@radius",
+			"props": {
+				"hide": true,
+				"isProps": true
+			},
+			"separators": [],
+			"lines": [],
+			"columns": [
+				{
+					"typeStr": "4",
+					"name": "fleshy"
+				},
+				{
+					"typeStr": "4",
+					"name": "wall"
+				}
+			]
+		},
+		{
+			"name": "backdrops@gameSpace",
+			"props": {
+				"hide": true,
+				"isProps": true
+			},
+			"separators": [],
+			"lines": [],
+			"columns": [
+				{
+					"typeStr": "3",
+					"name": "x"
+				},
+				{
+					"typeStr": "3",
+					"name": "y"
+				},
+				{
+					"typeStr": "3",
+					"name": "w"
+				},
+				{
+					"typeStr": "3",
+					"name": "h"
+				}
+			]
+		},
+		{
+			"name": "blades@animations",
+			"props": {
+				"hide": true
+			},
+			"separators": [],
+			"lines": [],
+			"columns": [
+				{
+					"typeStr": "0",
+					"name": "name",
+					"scope": 1
+				},
+				{
+					"typeStr": "8",
+					"name": "frames"
+				}
+			]
+		},
+		{
+			"name": "blades@animations@frames",
+			"props": {
+				"hide": true
+			},
+			"separators": [],
+			"lines": [],
+			"columns": [
+				{
+					"typeStr": "14",
+					"name": "sprite"
+				}
+			]
+		},
+		{
+			"name": "blades@center",
+			"props": {
+				"hide": true,
+				"isProps": true
+			},
+			"separators": [],
+			"lines": [],
+			"columns": [
+				{
+					"typeStr": "3",
+					"name": "x"
+				},
+				{
+					"typeStr": "3",
+					"name": "y"
+				}
+			]
+		},
+		{
+			"name": "blades@radius",
+			"props": {
+				"hide": true,
+				"isProps": true
+			},
+			"separators": [],
+			"lines": [],
+			"columns": [
+				{
+					"typeStr": "4",
+					"name": "fleshy"
+				},
+				{
+					"typeStr": "4",
+					"name": "walls"
+				}
+			]
+		}
+	],
+	"customTypes": [],
+	"compress": false
+}
