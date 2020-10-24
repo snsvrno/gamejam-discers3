@@ -7,33 +7,13 @@ enum State {
 class Saw extends h2d.Object {
 
 	/**
-	 * The rotational speed of the saw, doesn't do anything except
-	 * make it look cool!
+	 * The period of time where the saw is inactive, and doesn't do anything.
 	 */
-	private static var ROTSPEED : Float = 1;
-	/**
-	 * The original scale to use when scaling this object, will be
-	 * scaled further with the window scaling.
-	 */
-	private static var SCALE : Float = 1;
-	/**
-	 * The period of time where the saw is inactive, and doesn't do
-	 * anything.
-	 */
-	private static var SPAWNWAIT : Float = 2;
+	private var spawnWait : Float;
 	/**
 	 * The alpha value immediately at spawn.
 	 */
-	private static var SPAWNTRANSPARENCY : Float = 0.25;
-	/**
-	 * The default movement speed of the saw.
-	 */
-	private static var MOVEMENTSPEED : Float = 100;
-	/**
-	 * The variance that happens when a wall hit occurs. Is a scalar for the 
-	 * random angle that is added, so between `0.0` and `1.0`
-	 */
-	private static var COLLISIONRANDOMNESS : Float = 0.1;
+	private var spawnTransparency : Float;
 	
 
 	// the world height and width, so we can properly scare the objects
@@ -44,7 +24,18 @@ class Saw extends h2d.Object {
 	/**
 	 * Rotational speed of the saw.
 	 */
-	private var rotationSpeed : Float = ROTSPEED;
+	private var rotationSpeed : Float;
+
+	/**
+	 * The base scale value that is used when resizing this saw item.
+	 */
+	private var baseScale : Float;
+
+	/**
+	 * The variance that happens when a wall hit occurs. Is a scalar for the 
+	 * random angle that is added, so between `0.0` and `1.0`
+	 */
+	private var collisionRandomness : Float;
 
 	/**
 	 * The state of the saw. Always starts in `SpawnWait` which is the
@@ -66,7 +57,8 @@ class Saw extends h2d.Object {
 	 * The movement direction of the saw.
 	 */
 	private var direction : { x : Float, y : Float } = { x : 0, y : 0 };
-	private var movementSpeed : Float = MOVEMENTSPEED;
+	private var movementSpeed : Float;
+
 	/**
 	 * The radius when bouncing and stuff, not for game objects
 	 */
@@ -76,8 +68,19 @@ class Saw extends h2d.Object {
 	 */
 	private var hitRadius : Float;
 
-	public function new(x : Float, y : Float, s : Float, ?parent : h2d.Object) {
+	public function new(type : Data.BladesKind, x : Float, y : Float, s : Float, ?parent : h2d.Object) {
 		super(parent);
+
+		// loads the blade definition from the `cdb`
+		var def = Data.blades.get(type);
+		// sets the collsion radius
+		collisionRadius = def.radius.walls;
+		collisionRandomness = def.collisionRandomness;
+		baseScale = def.scale;
+		movementSpeed = def.movementSpeed;
+		rotationSpeed = def.rotationalSpeed;
+		spawnWait = def.spawn.wait;
+		spawnTransparency = def.spawn.transparency;
 
 		var window = hxd.Window.getInstance();
 		worldW = window.width;
@@ -85,9 +88,9 @@ class Saw extends h2d.Object {
 
 		this.x = x;
 		this.y = y;
-		setScale(SCALE * s);
+		setScale(baseScale * s);
 
-		var def = Data.blades.get(base);
+		// loads the sprite to use.
 		var tileSize = def.sprite.size;
 		var t = hxd.Res.load(def.sprite.file).toTile();
 		t = t.sub(def.sprite.x * tileSize, def.sprite.y * tileSize, tileSize, tileSize);
@@ -95,10 +98,8 @@ class Saw extends h2d.Object {
 		sprite.x = -t.width/2;
 		sprite.y = -t.height/2;
 
-		collisionRadius = def.radius.walls;
-
 		setSpawnState();
-		timerQue.push(new sn.Timer(SPAWNWAIT, leaveSpawnState));
+		timerQue.push(new sn.Timer(spawnWait, leaveSpawnState));
 	}
 
 	public function update(dt : Float) {
@@ -153,7 +154,7 @@ class Saw extends h2d.Object {
 	 */
 	public function resize(factor : Float) {
 		// changes the visual scale.
-		setScale(SCALE * factor);
+		setScale(baseScale * factor);
 
 		// reshifts its position in the world, using ratios.
 		var window = hxd.Window.getInstance();
@@ -188,8 +189,8 @@ class Saw extends h2d.Object {
 	private function addRandomSpin() {
 		// generates a random angle to give the bounce a little more interest.
 		var randomAngle = Math.random() * Math.PI * 2;
-		var ax = Math.cos(randomAngle) * COLLISIONRANDOMNESS;
-		var ay = Math.sin(randomAngle) * COLLISIONRANDOMNESS;
+		var ax = Math.cos(randomAngle) * collisionRandomness;
+		var ay = Math.sin(randomAngle) * collisionRandomness;
 		direction.x += ax;
 		direction.y += ay;
 
@@ -201,7 +202,7 @@ class Saw extends h2d.Object {
 
 	private function setSpawnState() {
 		state = SpawnWait;
-		alpha = SPAWNTRANSPARENCY;
+		alpha = spawnTransparency;
 	}
 
 	private function leaveSpawnState() {

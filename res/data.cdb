@@ -14,11 +14,32 @@
 				},
 				{
 					"typeStr": "17",
-					"name": "center"
+					"name": "radius"
+				},
+				{
+					"typeStr": "4",
+					"name": "scale",
+					"documentation": "The original scale to use when scaling this object, will be scaled further with the window scaling."
+				},
+				{
+					"typeStr": "4",
+					"name": "collisionRandomness",
+					"documentation": "The variance that happens when a wall hit occurs. Is a scalar for the random angle that is added, so between `0.0` and `1.0`"
+				},
+				{
+					"typeStr": "4",
+					"name": "movementSpeed",
+					"documentation": "The default movement speed of the saw."
+				},
+				{
+					"typeStr": "4",
+					"name": "rotationalSpeed",
+					"documentation": "The rotational speed of the saw, doesn't do anything except make it look cool!"
 				},
 				{
 					"typeStr": "17",
-					"name": "radius"
+					"name": "spawn",
+					"documentation": "spawn related properties."
 				},
 				{
 					"typeStr": "8",
@@ -29,10 +50,6 @@
 				{
 					"name": "base",
 					"animations": [],
-					"center": {
-						"x": 8,
-						"y": 8
-					},
 					"sprite": {
 						"file": "player-disc.png",
 						"size": 16,
@@ -42,6 +59,14 @@
 					"radius": {
 						"fleshy": 6,
 						"walls": 7
+					},
+					"scale": 1,
+					"collisionRandomness": 0.1,
+					"movementSpeed": 100,
+					"rotationalSpeed": 1,
+					"spawn": {
+						"wait": 2,
+						"transparency": 0.25
 					}
 				}
 			],
@@ -355,25 +380,6 @@
 			]
 		},
 		{
-			"name": "blades@center",
-			"props": {
-				"hide": true,
-				"isProps": true
-			},
-			"separators": [],
-			"lines": [],
-			"columns": [
-				{
-					"typeStr": "3",
-					"name": "x"
-				},
-				{
-					"typeStr": "3",
-					"name": "y"
-				}
-			]
-		},
-		{
 			"name": "blades@radius",
 			"props": {
 				"hide": true,
@@ -389,6 +395,27 @@
 				{
 					"typeStr": "4",
 					"name": "walls"
+				}
+			]
+		},
+		{
+			"name": "blades@spawn",
+			"props": {
+				"hide": true,
+				"isProps": true
+			},
+			"separators": [],
+			"lines": [],
+			"columns": [
+				{
+					"typeStr": "4",
+					"name": "wait",
+					"documentation": "The period of time where the saw is inactive, and doesn't do anything. The collision is disabled during this period."
+				},
+				{
+					"typeStr": "4",
+					"name": "transparency",
+					"documentation": "The alpha period during the wait."
 				}
 			]
 		}

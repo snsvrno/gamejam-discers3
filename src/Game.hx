@@ -151,7 +151,7 @@ class Game extends hxd.App {
 
 	private function createSaw(x : Float, y : Float) {
 
-		var s = new game.Saw(x, y, backgroundImage.scaleX, sawLayer);
+		var s = new game.Saw(base, x, y, backgroundImage.scaleX, sawLayer);
 		s.setDirectionAngle(Math.random() * Math.PI * 2);
 		saws.push(s);
 	}
