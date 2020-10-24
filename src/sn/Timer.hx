@@ -2,7 +2,7 @@ package sn;
 
 class Timer {
 	private var timeLimit : Float;
-	private var timer : Float = 0;
+	public var timer(default,null) : Float = 0;
 	private var callback : () -> Void;
 
 	public function new(limit : Float, callback : () -> Void) {
@@ -20,6 +20,7 @@ class Timer {
 		timer += dt;
 
 		if (timeLimit <= timer) {
+			timer = timeLimit;
 			callback();
 			return true;
 		}

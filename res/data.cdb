@@ -32,10 +32,6 @@
 					"documentation": "spawn related properties."
 				},
 				{
-					"typeStr": "8",
-					"name": "animations"
-				},
-				{
 					"typeStr": "17",
 					"name": "speeds"
 				},
@@ -48,7 +44,6 @@
 			"lines": [
 				{
 					"name": "base",
-					"animations": [],
 					"sprite": {
 						"file": "player-disc.png",
 						"size": 16,
@@ -65,12 +60,15 @@
 						"rotation": 1
 					},
 					"collision": {
-						"fleshy": 6,
+						"fleshy": 7,
 						"walls": 7,
 						"randomness": 0
 					},
 					"behavior": {
 						"wallCollision": [
+							0
+						],
+						"movement": [
 							0
 						]
 					},
@@ -240,8 +238,16 @@
 					"name": "center"
 				},
 				{
+					"typeStr": "4",
+					"name": "scale"
+				},
+				{
 					"typeStr": "17",
 					"name": "radius"
+				},
+				{
+					"typeStr": "4",
+					"name": "speed"
 				}
 			],
 			"lines": [
@@ -277,6 +283,20 @@
 								}
 							],
 							"speed": 1
+						},
+						{
+							"name": "idle",
+							"frames": [
+								{
+									"frame": {
+										"file": "human.png",
+										"size": 32,
+										"x": 0,
+										"y": 0
+									}
+								}
+							],
+							"speed": 0
 						},
 						{
 							"name": "walk",
@@ -338,19 +358,96 @@
 						"y": 17
 					},
 					"radius": {
-						"fleshy": 3,
-						"wall": 5
+						"fleshy": 5,
+						"wall": 5,
+						"vision": 30
 					},
 					"sprite": {
 						"file": "human.png",
 						"size": 32,
 						"x": 0,
 						"y": 0
+					},
+					"scale": 0.5,
+					"speed": 100
+				}
+			],
+			"separators": [],
+			"props": {}
+		},
+		{
+			"name": "target",
+			"columns": [
+				{
+					"typeStr": "0",
+					"name": "name",
+					"scope": null
+				},
+				{
+					"typeStr": "14",
+					"name": "sprite"
+				},
+				{
+					"typeStr": "14",
+					"name": "activeSprite"
+				},
+				{
+					"typeStr": "17",
+					"name": "area"
+				}
+			],
+			"lines": [
+				{
+					"name": "main",
+					"sprite": {
+						"file": "player-target.png",
+						"size": 32,
+						"x": 0,
+						"y": 0
+					},
+					"activeSprite": {
+						"file": "player-target.png",
+						"size": 32,
+						"x": 1,
+						"y": 0
+					},
+					"area": {
+						"x": 4,
+						"y": 4,
+						"w": 27,
+						"h": 27
 					}
 				}
 			],
 			"separators": [],
 			"props": {}
+		},
+		{
+			"name": "target@area",
+			"props": {
+				"hide": true,
+				"isProps": true
+			},
+			"separators": [],
+			"lines": [],
+			"columns": [
+				{
+					"typeStr": "4",
+					"name": "x"
+				},
+				{
+					"typeStr": "4",
+					"name": "y"
+				},
+				{
+					"typeStr": "4",
+					"name": "w"
+				},
+				{
+					"typeStr": "4",
+					"name": "h"
+				}
+			]
 		},
 		{
 			"name": "humans@animations",
@@ -361,9 +458,8 @@
 			"lines": [],
 			"columns": [
 				{
-					"typeStr": "0",
-					"name": "name",
-					"scope": 1
+					"typeStr": "1",
+					"name": "name"
 				},
 				{
 					"typeStr": "8",
@@ -424,6 +520,10 @@
 				{
 					"typeStr": "4",
 					"name": "wall"
+				},
+				{
+					"typeStr": "4",
+					"name": "vision"
 				}
 			]
 		},
@@ -451,25 +551,6 @@
 				{
 					"typeStr": "3",
 					"name": "h"
-				}
-			]
-		},
-		{
-			"name": "blades@animations",
-			"props": {
-				"hide": true
-			},
-			"separators": [],
-			"lines": [],
-			"columns": [
-				{
-					"typeStr": "0",
-					"name": "name",
-					"scope": 1
-				},
-				{
-					"typeStr": "8",
-					"name": "frames"
 				}
 			]
 		},
@@ -507,20 +588,10 @@
 					"typeStr": "9:WallCollision",
 					"name": "wallCollision",
 					"documentation": "what does the saw do when it hits the wall"
-				}
-			]
-		},
-		{
-			"name": "blades@animations@frames",
-			"props": {
-				"hide": true
-			},
-			"separators": [],
-			"lines": [],
-			"columns": [
+				},
 				{
-					"typeStr": "14",
-					"name": "sprite"
+					"typeStr": "9:MovementBehavior",
+					"name": "movement"
 				}
 			]
 		},
@@ -583,6 +654,28 @@
 				{
 					"name": "Dispose",
 					"args": []
+				}
+			]
+		},
+		{
+			"name": "MovementBehavior",
+			"cases": [
+				{
+					"name": "Straight",
+					"args": []
+				},
+				{
+					"name": "SineWave",
+					"args": [
+						{
+							"name": "strength",
+							"typeStr": "4"
+						},
+						{
+							"name": "speed",
+							"typeStr": "4"
+						}
+					]
 				}
 			]
 		}

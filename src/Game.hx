@@ -1,4 +1,9 @@
+import game.Target;
 import hxd.res.Font;
+
+enum GameState {
+	Play; Pause; Done;
+}
 
 class Game extends hxd.App {
 	////////////////////////////////////////////////////////////////////////////////////////
@@ -17,11 +22,20 @@ class Game extends hxd.App {
 	 private static inline var TIMERTEXTSCALEFACTOR : Float = 0.25;
 	 
 	////////////////////////////////////////////////////////////////////////////////////////
-	// STATIC CONSTANTS
+	// STATIC MEMBERS
+	
 	private static var instance : Game;
+	public static function getOverallTime() : Float { return instance.gameTimer; }
+	
+	////////////////////////////////////////////////////////////////////////////////////////
+	// GENERAL STUFF
 
+	private var gameState : GameState;
+	private var target : game.Target;
+	
 	////////////////////////////////////////////////////////////////////////////////////////
 	// UI RELATED OBJECTS
+	
 	private var uiLayer : h2d.Object;
 	private var gameTimer : Float = 0;
 	private var timerText : h2d.Text;
@@ -31,6 +45,12 @@ class Game extends hxd.App {
 
 	private var saws : Array<game.Saw> = [];
 	private var sawLayer : h2d.Object;
+
+	////////////////////////////////////////////////////////////////////////////////////////
+	// HUMAN RELATED OBJECTS
+
+	private var humans : Array<game.Human> = [];
+	private var humanLayer : h2d.Object;
 
 	////////////////////////////////////////////////////////////////////////////////////////
 	// EFFECTS RELATED OBJECTS
@@ -57,6 +77,7 @@ class Game extends hxd.App {
 	#if debug
 	private var debugOverlay : h2d.Object;
 	private var debugBoundaryOverlay : h2d.Graphics;
+	private var debugCollisionsOverlay : h2d.Graphics;
 	#end
 
 	////////////////////////////////////////////////////////////////////////////////////////
@@ -75,14 +96,21 @@ class Game extends hxd.App {
 		debugOverlay = new h2d.Object();
 		debugOverlay.alpha = 0;
 		debugBoundaryOverlay = new h2d.Graphics(debugOverlay);
+		debugCollisionsOverlay = new h2d.Graphics(debugOverlay);
 		#end
 
 		engine.backgroundColor = 0x666666;
 
 		loadBackgroundImage(level1);
+		
+		var tp = getPointInsideLevel(game.Target.SPAWNBUFFER * backgroundImage.scaleX);
+		target = new Target(tp.x, tp.y, backgroundImage.scaleX, s2d);
+		humanLayer = new h2d.Object(s2d);
 		sawLayer = new h2d.Object(s2d);
-
 		effectsLayer = new h2d.Object(s2d);
+
+		var p = getPointInsideLevel(32);
+		humans.push(new game.Human(p.x, p.y, backgroundImage.scaleX, simple, humanLayer));
 
 		#if debug
 		s2d.addChild(debugOverlay);
@@ -92,30 +120,46 @@ class Game extends hxd.App {
 		timerText = new h2d.Text(hxd.Res.fonts.choko.toFont(), uiLayer);
 		timerText.text = "000.000";
 
+		changeGameState(Play);
 		onResize(); // trigger all the sizing
 	}
 
 	override function update(dt : Float) {
 		super.update(dt);
 
-		gameTimer += dt;
-		// formats the number for display.
-		var numberText = '${Math.floor(gameTimer * 1000)/1000}';
-		var preNumber = '${Math.floor(gameTimer)}';
-		while(preNumber.length < 3) { preNumber = "0" + preNumber; }
-		timerText.text = preNumber;
-		timerText.text += ".";
-		timerText.text += numberText.substr(numberText.length-3);
+		if (humans.length == 0) { changeGameState(Done); }
 
-		removeSaws(); // checks and removes any saws that need to be removed.
-		removeEffects(); // checks and removes any effects that need to be removed.
+		switch(gameState) {
+			case Play:
 
-		// runs an update on the remaining saws.
-		for (s in saws) {
-			s.update(dt);
+				if (target.active) { 
+					gameTimer += dt;
+					// formats the number for display.
+					var preNumber = '${Math.floor(gameTimer)}';
+					var postNumber = '${Math.floor((Math.floor(gameTimer * 1000)/1000 - Math.floor(gameTimer))*1000)}';
+					while(preNumber.length < 3) { preNumber = "0" + preNumber; }
+					timerText.text = '$preNumber.$postNumber';
+				}
+
+				removeSaws(); // checks and removes any saws that need to be removed.
+				removeEffects(); // checks and removes any effects that need to be removed.
+				removeHumans(); // checks and removes any humans that need to be removed.
+
+				for (s in saws) { s.update(dt); }
+				sawCollisions(); // check if saws hit walls.
+
+				humanAvoidsSaws(); // tells the humans where the saws are this frame.
+				for (h in humans) { h.goToPoint(target.x, target.y); }
+				for (h in humans) { h.update(dt); }
+				humanCollisions();
+
+				humanSawCollisions();
+
+				target.update(dt, humans);
+
+			case unknown:
+				trace('unimplemented game state in update: $unknown');
 		}
-
-		sawCollisions(); // check if saws hit walls.
 	}
 
 	override function onResize() {
@@ -123,7 +167,9 @@ class Game extends hxd.App {
 
 		placeBackgroundImage(); // resize the background image and boundaries.
 		resizeSaws(); // we need to resize and adjust the position of all actors
+		resizeHumans(); // we need to resize all the humans.
 		resizeUi(); // resizes the UI;
+		target.resize(backgroundImage.scaleX);
 	}
 
 	function onEvent(event : hxd.Event) {
@@ -141,6 +187,12 @@ class Game extends hxd.App {
 			case _:
 		}
 	}
+
+	private function changeGameState(newState : GameState) {
+		gameState = newState;
+
+	}
+
 	////////////////////////////////////////////////////////////////////////////////////////
 	// UI RELATED FUNCTIONS.
 
@@ -191,6 +243,54 @@ class Game extends hxd.App {
 	}
 
 	////////////////////////////////////////////////////////////////////////////////////////
+	// HUMAN RELATED FUNCTIONS.
+
+	private function humanSawCollisions() {
+		for (s in saws) {
+			for (h in humans) {
+				var distance = sn.Math.distance(s.x-h.x,s.y-h.y);
+				if (distance < h.hitRadius * h.scaleX + s.hitRadius * s.scaleX) {
+					h.hit();
+				}
+			}
+		}
+	}
+
+	private function resizeHumans() {
+		for (h in humans) {
+			h.resize(backgroundImage.scaleX);
+		}
+	}
+
+	private function humanAvoidsSaws() {
+		for (h in humans) {
+			for (s in saws) {
+				if (s.state == Active) {
+					h.avoidPoint(s.x, s.y);
+				}
+			}
+		}
+	}
+
+	private function humanCollisions() {
+		for (h in humans) { h.wallCollisionCheck(backgroundEdges); }
+	}
+
+	/**
+	 * Checks all effects, removes the ones that we don't need anymore. 
+	 */
+	 private function removeHumans() {
+		var i = humans.length - 1;
+		while(i >= 0) {
+			if (humans[i].queueForDeletion) {
+				humanLayer.removeChild(humans[i]);
+				humans.remove(humans[i]);
+			}
+			i--;
+		}
+	}
+
+	////////////////////////////////////////////////////////////////////////////////////////
 	// EFFECTS RELATED FUNCTIONS.
 
 	/**
@@ -215,6 +315,24 @@ class Game extends hxd.App {
 
 	////////////////////////////////////////////////////////////////////////////////////////
 	// BACKGROUND RELATED FUNCTIONS.
+
+	/**
+	 * Gets a random point inside the level space, respects the padding from the wall edges
+	 * (used when you want to place an object with a width and height and don't want it
+	 * intersecting the walls)
+	 * @param padding 
+	 */
+	private function getPointInsideLevel(padding : Float) : { x : Float, y : Float } {
+		var width = backgroundEdges.right - backgroundEdges.left - padding * 2;
+		var height = backgroundEdges.bottom - backgroundEdges.top - padding * 2;
+
+		var x = backgroundEdges.left + padding + Math.random() * width;
+		var y = backgroundEdges.top + padding + Math.random() * height;
+
+		return {
+			x : x, y : y,
+		}
+	}
 
 	/**
 	 * Loads the background from the Data.cdb database. Creates the new data bitmap and triggers
@@ -258,6 +376,7 @@ class Game extends hxd.App {
 
 		#if debug
 		debugDrawBackgroundImageBoundary();
+		debugDrawCollisionBoxes();
 		#end
 	}
 
@@ -272,6 +391,25 @@ class Game extends hxd.App {
 		debugBoundaryOverlay.beginFill(0x00FF00,0.25);
 		debugBoundaryOverlay.drawRect(backgroundEdges.left, backgroundEdges.top, backgroundEdges.right - backgroundEdges.left, backgroundEdges.bottom - backgroundEdges.top);
 		debugBoundaryOverlay.endFill();
+
+	}
+
+	/**
+	 * [**DEBUG FUNCTION**] used to draw object collisions.
+	 */
+	private function debugDrawCollisionBoxes() {
+		debugCollisionsOverlay.clear();
+
+		debugCollisionsOverlay.lineStyle(1,0xFF0000);
+		debugCollisionsOverlay.beginFill(0xFFFF00,0.25);
+		for (s in saws) {
+			debugCollisionsOverlay.drawCircle(s.x, s.y, s.hitRadius * s.scaleX);
+		}
+		for (h in humans) {
+			debugCollisionsOverlay.drawCircle(h.x, h.y, h.hitRadius * h.scaleX);
+		}
+		debugCollisionsOverlay.endFill();
+
 	}
 
 	////////////////////////////////////////////////////////////////////////////////////////

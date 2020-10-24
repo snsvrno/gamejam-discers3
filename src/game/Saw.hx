@@ -45,7 +45,7 @@ class Saw extends h2d.Object {
 	 * The state of the saw. Always starts in `SpawnWait` which is the
 	 * point where it stays still and counts down before it starts moving.
 	 */
-	private var state : State = SpawnWait;
+	public var state(default, null) : State = SpawnWait;
 
 	/**
 	 * The basic image.
@@ -70,11 +70,15 @@ class Saw extends h2d.Object {
 	/**
 	 * The radius for game objects, like humans.
 	 */
-	private var hitRadius : Float;
+	public var hitRadius(default, null) : Float;
 	/**
 	 * What kind of behavior does this saw do when it hits a wall.
 	 */
 	private var wallCollisionBehavior : Data.WallCollision;
+	/**
+	 * What kind of behavior does this saw normally do when it moves.
+	 */
+	private var movementBehavior : Data.MovementBehavior;
 
 	/**
 	 * switch so we know we no longer want this piece around.
@@ -88,6 +92,7 @@ class Saw extends h2d.Object {
 		var def = Data.blades.get(type);
 		// sets the collsion radius
 		collisionRadius = def.collision.walls;
+		hitRadius = def.collision.fleshy;
 		collisionRandomness = def.collision.randomness;
 		baseScale = def.scale;
 		movementSpeed = def.speeds.move;
@@ -95,6 +100,7 @@ class Saw extends h2d.Object {
 		spawnWait = def.spawn.wait;
 		spawnTransparency = def.spawn.transparency;
 		wallCollisionBehavior = def.behavior.wallCollision;
+		movementBehavior = def.behavior.movement;
 
 		var window = hxd.Window.getInstance();
 		worldW = window.width;
@@ -122,9 +128,16 @@ class Saw extends h2d.Object {
 			// rotate the saw
 			this.rotate(dt * rotationSpeed);
 
-			// moves the saw. (need to account for the scale)
-			x += direction.x * movementSpeed * dt * scaleX;
-			y += direction.y * movementSpeed * dt * scaleY;
+			// moves the saw based on the behavior defined.
+			switch (movementBehavior) {
+				case Straight:
+					x += direction.x * movementSpeed * dt * scaleX;
+					y += direction.y * movementSpeed * dt * scaleY;
+
+				case unknown:
+					trace('unplemented movement behavior $unknown');
+			}
+
 		}
 
 		// works on the timer que if there are any timers.
