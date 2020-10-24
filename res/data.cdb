@@ -9,32 +9,22 @@
 					"scope": null
 				},
 				{
+					"typeStr": "2",
+					"name": "spawnable",
+					"documentation": "can this saw type be chosen by the player."
+				},
+				{
 					"typeStr": "14",
 					"name": "sprite"
 				},
 				{
 					"typeStr": "17",
-					"name": "radius"
+					"name": "collision"
 				},
 				{
 					"typeStr": "4",
 					"name": "scale",
 					"documentation": "The original scale to use when scaling this object, will be scaled further with the window scaling."
-				},
-				{
-					"typeStr": "4",
-					"name": "collisionRandomness",
-					"documentation": "The variance that happens when a wall hit occurs. Is a scalar for the random angle that is added, so between `0.0` and `1.0`"
-				},
-				{
-					"typeStr": "4",
-					"name": "movementSpeed",
-					"documentation": "The default movement speed of the saw."
-				},
-				{
-					"typeStr": "4",
-					"name": "rotationalSpeed",
-					"documentation": "The rotational speed of the saw, doesn't do anything except make it look cool!"
 				},
 				{
 					"typeStr": "17",
@@ -44,6 +34,15 @@
 				{
 					"typeStr": "8",
 					"name": "animations"
+				},
+				{
+					"typeStr": "17",
+					"name": "speeds"
+				},
+				{
+					"typeStr": "17",
+					"name": "behavior",
+					"documentation": "dictates saw behaviors"
 				}
 			],
 			"lines": [
@@ -56,22 +55,131 @@
 						"x": 0,
 						"y": 0
 					},
-					"radius": {
-						"fleshy": 6,
-						"walls": 7
-					},
 					"scale": 1,
-					"collisionRandomness": 0.1,
-					"movementSpeed": 100,
-					"rotationalSpeed": 1,
 					"spawn": {
 						"wait": 2,
 						"transparency": 0.25
+					},
+					"speeds": {
+						"move": 100,
+						"rotation": 1
+					},
+					"collision": {
+						"fleshy": 6,
+						"walls": 7,
+						"randomness": 0
+					},
+					"behavior": {
+						"wallCollision": [
+							0
+						]
+					},
+					"spawnable": true
+				}
+			],
+			"separators": [],
+			"props": {}
+		},
+		{
+			"name": "effects",
+			"columns": [
+				{
+					"typeStr": "0",
+					"name": "name",
+					"scope": null
+				},
+				{
+					"typeStr": "8",
+					"name": "animation"
+				},
+				{
+					"typeStr": "17",
+					"name": "center"
+				},
+				{
+					"typeStr": "5:Once,Repeat,PingPong",
+					"name": "behavior"
+				}
+			],
+			"lines": [
+				{
+					"name": "sparks",
+					"animation": [
+						{
+							"frame": {
+								"file": "sparks.png",
+								"size": 16,
+								"x": 0,
+								"y": 0
+							}
+						},
+						{
+							"frame": {
+								"file": "sparks.png",
+								"size": 16,
+								"x": 1,
+								"y": 0
+							}
+						},
+						{
+							"frame": {
+								"file": "sparks.png",
+								"size": 16,
+								"x": 2,
+								"y": 0
+							}
+						},
+						{
+							"frame": {
+								"file": "sparks.png",
+								"size": 16,
+								"x": 3,
+								"y": 0
+							}
+						}
+					],
+					"behavior": 0,
+					"center": {
+						"x": 8,
+						"y": 8
 					}
 				}
 			],
 			"separators": [],
 			"props": {}
+		},
+		{
+			"name": "effects@animation",
+			"props": {
+				"hide": true
+			},
+			"separators": [],
+			"lines": [],
+			"columns": [
+				{
+					"typeStr": "14",
+					"name": "frame"
+				}
+			]
+		},
+		{
+			"name": "effects@center",
+			"props": {
+				"hide": true,
+				"isProps": true
+			},
+			"separators": [],
+			"lines": [],
+			"columns": [
+				{
+					"typeStr": "3",
+					"name": "x"
+				},
+				{
+					"typeStr": "3",
+					"name": "y"
+				}
+			]
 		},
 		{
 			"name": "backdrops",
@@ -366,6 +474,43 @@
 			]
 		},
 		{
+			"name": "blades@speeds",
+			"props": {
+				"hide": true,
+				"isProps": true
+			},
+			"separators": [],
+			"lines": [],
+			"columns": [
+				{
+					"typeStr": "4",
+					"name": "move",
+					"documentation": "The default movement speed of the saw."
+				},
+				{
+					"typeStr": "4",
+					"name": "rotation",
+					"documentation": "The rotational speed of the saw, doesn't do anything except make it look cool!"
+				}
+			]
+		},
+		{
+			"name": "blades@behavior",
+			"props": {
+				"hide": true,
+				"isProps": true
+			},
+			"separators": [],
+			"lines": [],
+			"columns": [
+				{
+					"typeStr": "9:WallCollision",
+					"name": "wallCollision",
+					"documentation": "what does the saw do when it hits the wall"
+				}
+			]
+		},
+		{
 			"name": "blades@animations@frames",
 			"props": {
 				"hide": true
@@ -380,7 +525,7 @@
 			]
 		},
 		{
-			"name": "blades@radius",
+			"name": "blades@collision",
 			"props": {
 				"hide": true,
 				"isProps": true
@@ -395,6 +540,12 @@
 				{
 					"typeStr": "4",
 					"name": "walls"
+				},
+				{
+					"typeStr": "4",
+					"name": "randomness",
+					"display": 1,
+					"documentation": "The variance that happens when a wall hit occurs. Is a scalar for the random angle that is added, so between `0.0` and `1.0`"
 				}
 			]
 		},
@@ -415,11 +566,26 @@
 				{
 					"typeStr": "4",
 					"name": "transparency",
-					"documentation": "The alpha period during the wait."
+					"documentation": "The alpha period during the wait.",
+					"display": 1
 				}
 			]
 		}
 	],
-	"customTypes": [],
+	"customTypes": [
+		{
+			"name": "WallCollision",
+			"cases": [
+				{
+					"name": "Bounce",
+					"args": []
+				},
+				{
+					"name": "Dispose",
+					"args": []
+				}
+			]
+		}
+	],
 	"compress": false
 }

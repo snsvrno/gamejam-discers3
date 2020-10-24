@@ -9,12 +9,16 @@ class Game extends hxd.App {
 	 * container. This is inside the game world, so smaller screens will have
 	 * less of a padding, so the relative should ook the same.
 	 */
-	private static var LEVELSCREENPADDING : Int = 10;
+	private static inline var LEVELSCREENPADDING : Int = 10;
 
 	/**
 	 * Timer Text scale factor
 	 */
-	 private static var TIMERTEXTSCALEFACTOR : Float = 0.25;
+	 private static inline var TIMERTEXTSCALEFACTOR : Float = 0.25;
+	 
+	////////////////////////////////////////////////////////////////////////////////////////
+	// STATIC CONSTANTS
+	private static var instance : Game;
 
 	////////////////////////////////////////////////////////////////////////////////////////
 	// UI RELATED OBJECTS
@@ -27,6 +31,12 @@ class Game extends hxd.App {
 
 	private var saws : Array<game.Saw> = [];
 	private var sawLayer : h2d.Object;
+
+	////////////////////////////////////////////////////////////////////////////////////////
+	// EFFECTS RELATED OBJECTS
+
+	private var effects : Array<game.Effect> = [];
+	private var effectsLayer : h2d.Object;
 
 	////////////////////////////////////////////////////////////////////////////////////////
 	// BACKGROUND RELATED ELEMENTS
@@ -43,17 +53,20 @@ class Game extends hxd.App {
 
 	////////////////////////////////////////////////////////////////////////////////////////
 	// DEBUG STUFF
+
 	#if debug
 	private var debugOverlay : h2d.Object;
 	private var debugBoundaryOverlay : h2d.Graphics;
 	#end
-
 
 	////////////////////////////////////////////////////////////////////////////////////////
 	// STANDARD OBJECT FUNCTIONS
 
 	override function init() {
 		initalizeResources();
+
+		super.init();
+		instance = this;
 
 		var window = hxd.Window.getInstance();
 		window.addEventTarget(onEvent);
@@ -64,13 +77,12 @@ class Game extends hxd.App {
 		debugBoundaryOverlay = new h2d.Graphics(debugOverlay);
 		#end
 
-		super.init();
-
 		engine.backgroundColor = 0x666666;
 
 		loadBackgroundImage(level1);
 		sawLayer = new h2d.Object(s2d);
 
+		effectsLayer = new h2d.Object(s2d);
 
 		#if debug
 		s2d.addChild(debugOverlay);
@@ -95,6 +107,10 @@ class Game extends hxd.App {
 		timerText.text += ".";
 		timerText.text += numberText.substr(numberText.length-3);
 
+		removeSaws(); // checks and removes any saws that need to be removed.
+		removeEffects(); // checks and removes any effects that need to be removed.
+
+		// runs an update on the remaining saws.
 		for (s in saws) {
 			s.update(dt);
 		}
@@ -156,10 +172,46 @@ class Game extends hxd.App {
 		saws.push(s);
 	}
 
+	/**
+	 * Checks all saws, removes the ones that we don't need anymore.
+	 */
+	private function removeSaws() {
+		var i = saws.length - 1;
+		while(i >= 0) {
+			if (saws[i].queueForDeletion) {
+				sawLayer.removeChild(saws[i]);
+				saws.remove(saws[i]);
+			}
+			i--;
+		}
+	}
+
 	private function sawCollisions() {
 		for (s in saws) { s.wallCollisionCheck(backgroundEdges); }
 	}
 
+	////////////////////////////////////////////////////////////////////////////////////////
+	// EFFECTS RELATED FUNCTIONS.
+
+	/**
+	 * Checks all effects, removes the ones that we don't need anymore. 
+	 */
+	private function removeEffects() {
+		var i = effects.length - 1;
+		while(i >= 0) {
+			if (effects[i].queueForDeletion) {
+				effectsLayer.removeChild(effects[i]);
+				effects.remove(effects[i]);
+			}
+			i--;
+		}
+	}
+
+	public static function addEffect(effect : game.Effect) {
+		effect.setScale(instance.backgroundImage.scaleX);
+		instance.effects.push(effect);
+		instance.effectsLayer.addChild(effect);
+	}
 
 	////////////////////////////////////////////////////////////////////////////////////////
 	// BACKGROUND RELATED FUNCTIONS.

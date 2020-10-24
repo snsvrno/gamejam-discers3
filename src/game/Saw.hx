@@ -4,6 +4,10 @@ enum State {
 	SpawnWait; Active;
 }
 
+enum Wall { 
+	Left; Top; Right; Bottom;
+}
+
 class Saw extends h2d.Object {
 
 	/**
@@ -67,6 +71,15 @@ class Saw extends h2d.Object {
 	 * The radius for game objects, like humans.
 	 */
 	private var hitRadius : Float;
+	/**
+	 * What kind of behavior does this saw do when it hits a wall.
+	 */
+	private var wallCollisionBehavior : Data.WallCollision;
+
+	/**
+	 * switch so we know we no longer want this piece around.
+	 */
+	public var queueForDeletion(default, null) : Bool = false;
 
 	public function new(type : Data.BladesKind, x : Float, y : Float, s : Float, ?parent : h2d.Object) {
 		super(parent);
@@ -74,13 +87,14 @@ class Saw extends h2d.Object {
 		// loads the blade definition from the `cdb`
 		var def = Data.blades.get(type);
 		// sets the collsion radius
-		collisionRadius = def.radius.walls;
-		collisionRandomness = def.collisionRandomness;
+		collisionRadius = def.collision.walls;
+		collisionRandomness = def.collision.randomness;
 		baseScale = def.scale;
-		movementSpeed = def.movementSpeed;
-		rotationSpeed = def.rotationalSpeed;
+		movementSpeed = def.speeds.move;
+		rotationSpeed = def.speeds.rotation;
 		spawnWait = def.spawn.wait;
 		spawnTransparency = def.spawn.transparency;
+		wallCollisionBehavior = def.behavior.wallCollision;
 
 		var window = hxd.Window.getInstance();
 		worldW = window.width;
@@ -166,24 +180,64 @@ class Saw extends h2d.Object {
 
 	public function wallCollisionCheck(walls : { left : Float, top : Float, right : Float, bottom : Float}) {
 
+		var impact : Null<Wall> = null;
+		var point : Null<{ x : Float, y : Float }> = null;
+
+		// checks the left and right sides for a collision
 		if (direction.x < 0 && x - collisionRadius * scaleX <= walls.left) {
-			direction.x *= -1;
-			addRandomSpin();
-
+			impact = Left;
+			point = { x : walls.left, y : y };
 		} else if (direction.x > 0 && x + collisionRadius * scaleX >= walls.right) {
-			direction.x *= -1;
-			addRandomSpin();
+			impact = Right;
+			point = { x : walls.right, y : y };
 		}
 
+		// checks the top and bottom sides for a collision.
 		if (direction.y < 0 && y - collisionRadius * scaleY <= walls.top) {
-			direction.y *= -1;
-			addRandomSpin();
+			impact = Top;
+			point = { x : x, y : walls.top };
 		} else if (direction.y > 0 && y + collisionRadius * scaleY >= walls.bottom) {
-			direction.y *= -1;
-			addRandomSpin();
+			impact = Bottom;
+			point = { x : x, y : walls.bottom };
 		}
 
+		if (impact != null && point != null) {
 
+			var effect = new game.Effect(point.x, point.y, sparks);
+			Game.addEffect(effect);
+
+			// if we have a wall collision lets check what kind of behavior we should do.
+			switch(wallCollisionBehavior) {
+				case Bounce: wallCollisionBounce(impact);
+				case Dispose: wallCollisionDispose(impact);
+				case unknown:
+					trace('unhandled wall collision behavior: $unknown');
+			}
+		}
+	}
+
+	/**
+	 * A basic bouncing wall behaviour, mirrors the direction opposite of the impact
+	 * to look like a bounce. Also applies a random spin if set.
+	 * @param wall 
+	 */
+	private function wallCollisionBounce(wall : Wall) {
+		switch(wall) {
+			case Left | Right:
+				direction.x *= -1;
+			case Top | Bottom:
+				direction.y *= -1;
+		}
+
+		addRandomSpin();
+	}
+
+	/**
+	 * Destroys the saw on the collision.
+	 * @param wall 
+	 */
+	private function wallCollisionDispose(wall : Wall) {
+		this.queueForDeletion = true;
 	}
 
 	private function addRandomSpin() {
