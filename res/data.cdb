@@ -56,7 +56,7 @@
 						"transparency": 0.25
 					},
 					"speeds": {
-						"move": 100,
+						"move": 60,
 						"rotation": 1
 					},
 					"collision": {

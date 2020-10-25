@@ -4,10 +4,7 @@ class Human extends h2d.Object {
 
 	private static inline var TARGETDEADBAND : Float = 4; 
 
-	// the world height and width, so we can properly scare the objects
-	// coordinates when resizing.
-	private var worldW : Float;
-	private var worldH : Float;
+	private var boundGrid : Game.Edges; // the bourd boundaries, used for scaling position when resizing.
 
 	private var currentAnimation : String;
 
@@ -31,42 +28,50 @@ class Human extends h2d.Object {
 
 	private var collisionRadius : Float;
 
-	private var scaleFactor : Float;
+	private var baseScale : Float;
 
 	/**
 	 * switch so we know we no longer want this piece around.
 	 */
 	public var queueForDeletion(default, null) : Bool = false;
 
-	public function new(x : Float, y : Float, s : Float, type : Data.HumansKind, ?parent : h2d.Object) {
+	public function new(x : Float, y : Float, s : Float, type : Data.HumansKind, edges : Game.Edges, ?parent : h2d.Object) {
 		super(parent);
 
 		loadAnimations(type);
 		var def = Data.humans.get(type);
-		scaleFactor = def.scale;
+		baseScale = def.scale;
 		movementSpeed = def.speed;
 		vision = def.radius.vision;
 		collisionRadius = def.radius.wall;
 		hitRadius = def.radius.fleshy;
 
-		var window = hxd.Window.getInstance();
-		worldW = window.width;
-		worldH = window.height;
+		boundGrid = {
+			left : edges.left,
+			right : edges.right,
+			top : edges.top,
+			bottom : edges.bottom,
+		};
 
 		this.x = x;
 		this.y = y;
-		setScale(scaleFactor * s);
+		setScale(baseScale * s);
 	}
 
-	public function resize(s : Float) {
-		setScale(scaleFactor * s);
+	public function resize(s : Float, edges : Game.Edges) {
+		// changes the visual scale.
+		setScale(baseScale * s);
 
-		// reshifts its position in the world, using ratios.
-		var window = hxd.Window.getInstance();
-		x = x / worldW * window.width;
-		y = y / worldH * window.height;
-		worldW = window.width;
-		worldH = window.height;
+		var rx = (x - boundGrid.left) / (boundGrid.right - boundGrid.left);
+		var ry = (y - boundGrid.top) / (boundGrid.bottom - boundGrid.top);
+
+		x = rx * (edges.right - edges.left) + edges.left;
+		y = ry * (edges.bottom - edges.top) + edges.top;
+
+		boundGrid.left = edges.left;
+		boundGrid.right = edges.right;
+		boundGrid.bottom = edges.bottom;
+		boundGrid.top = edges.top;
 	}
 
 	public function update(dt: Float) {

@@ -4,7 +4,7 @@ List of tasks to complete in order to complete the whole image for this game.
 
 ## General
 
-- [ ] Move all saw configuration into the `cdb` file _so I can quickly add more saws later_
+- [x] Move all saw configuration into the `cdb` file _so I can quickly add more saws later_
 - [ ] Scoring based on how long the human lasts vs how much "Saw Capital" spent.
 
 ## 2 Player

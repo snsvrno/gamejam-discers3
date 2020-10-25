@@ -22,8 +22,7 @@ class Saw extends h2d.Object {
 
 	// the world height and width, so we can properly scare the objects
 	// coordinates when resizing.
-	private var worldW : Float;
-	private var worldH : Float;
+	private var boundGrid : Game.Edges;
 
 	/**
 	 * Rotational speed of the saw.
@@ -85,7 +84,7 @@ class Saw extends h2d.Object {
 	 */
 	public var queueForDeletion(default, null) : Bool = false;
 
-	public function new(type : Data.BladesKind, x : Float, y : Float, s : Float, ?parent : h2d.Object) {
+	public function new(type : Data.BladesKind, x : Float, y : Float, s : Float, edges  : Game.Edges, ?parent : h2d.Object) {
 		super(parent);
 
 		// loads the blade definition from the `cdb`
@@ -102,9 +101,12 @@ class Saw extends h2d.Object {
 		wallCollisionBehavior = def.behavior.wallCollision;
 		movementBehavior = def.behavior.movement;
 
-		var window = hxd.Window.getInstance();
-		worldW = window.width;
-		worldH = window.height;
+		boundGrid = {
+			left : edges.left,
+			right : edges.right,
+			top : edges.top,
+			bottom : edges.bottom,
+		};
 
 		this.x = x;
 		this.y = y;
@@ -179,16 +181,20 @@ class Saw extends h2d.Object {
 	 * scale factor of the background (passed in).
 	 * @param factor 
 	 */
-	public function resize(factor : Float) {
+	public function resize(s : Float, edges : Game.Edges) {
 		// changes the visual scale.
-		setScale(baseScale * factor);
+		setScale(baseScale * s);
 
-		// reshifts its position in the world, using ratios.
-		var window = hxd.Window.getInstance();
-		x = x / worldW * window.width;
-		y = y / worldH * window.height;
-		worldW = window.width;
-		worldH = window.height;
+		var rx = (x - boundGrid.left) / (boundGrid.right - boundGrid.left);
+		var ry = (y - boundGrid.top) / (boundGrid.bottom - boundGrid.top);
+
+		x = rx * (edges.right - edges.left) + edges.left;
+		y = ry * (edges.bottom - edges.top) + edges.top;
+
+		boundGrid.left = edges.left;
+		boundGrid.right = edges.right;
+		boundGrid.bottom = edges.bottom;
+		boundGrid.top = edges.top;
 	}
 
 	public function wallCollisionCheck(walls : { left : Float, top : Float, right : Float, bottom : Float}) {

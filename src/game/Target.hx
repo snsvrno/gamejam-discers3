@@ -8,10 +8,8 @@ class Target extends h2d.Object {
 	 */
 	private static inline var TRANSITIONTIME : Float = 0.5;
 
-	// the world height and width, so we can properly scare the objects
-	// coordinates when resizing.
-	private var worldW : Float;
-	private var worldH : Float;
+	
+	private var boundGrid : Game.Edges; // the bourd boundaries, used for scaling position when resizing.
 
 	private var inactiveBitmap : h2d.Bitmap;
 	private var activeBitmap : h2d.Bitmap;
@@ -27,12 +25,15 @@ class Target extends h2d.Object {
 	public var active(get, null) : Bool;
 	private function get_active() : Bool { return activeBitmap.alpha != 0 && transitioningToActive == true; }
 
-	public function new(x : Float, y : Float, s : Float, ?parent : h2d.Object) {
+	public function new(x : Float, y : Float, s : Float, edges : Game.Edges, ?parent : h2d.Object) {
 		super(parent);
-
-		var window = hxd.Window.getInstance();
-		worldW = window.width;
-		worldH = window.height;
+		
+		boundGrid = {
+			left : edges.left,
+			right : edges.right,
+			top : edges.top,
+			bottom : edges.bottom,
+		};
 
 		var def = Data.target.get(main);
 		bounds = {
@@ -90,16 +91,20 @@ class Target extends h2d.Object {
 		}
 	}
 
-	public function resize(factor : Float) {
+	public function resize(s : Float, edges : Game.Edges) {
 		// changes the visual scale.
-		setScale(baseScale * factor);
+		setScale(baseScale * s);
 
-		// reshifts its position in the world, using ratios.
-		var window = hxd.Window.getInstance();
-		x = x / worldW * window.width;
-		y = y / worldH * window.height;
-		worldW = window.width;
-		worldH = window.height;
+		var rx = (x - boundGrid.left) / (boundGrid.right - boundGrid.left);
+		var ry = (y - boundGrid.top) / (boundGrid.bottom - boundGrid.top);
+
+		x = rx * (edges.right - edges.left) + edges.left;
+		y = ry * (edges.bottom - edges.top) + edges.top;
+
+		boundGrid.left = edges.left;
+		boundGrid.right = edges.right;
+		boundGrid.bottom = edges.bottom;
+		boundGrid.top = edges.top;
 	}
 
 	private function setActive(status : Bool) {
