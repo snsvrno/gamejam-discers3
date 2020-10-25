@@ -1,3 +1,6 @@
+import overlays.Gameover;
+import overlays.Pause;
+import h3d.shader.pbr.VolumeDecal.DecalOverlay;
 import h2d.Object;
 import game.Target;
 import hxd.res.Font;
@@ -43,11 +46,8 @@ class Game extends hxd.App {
 	private var gameTimer : Float = 0;
 	private var timerText : h2d.Text;
 
-	private var pauseText : h2d.Text;
-	private var pauseLayer : h2d.Object;
-	
-	private var gameOverLayer : h2d.Object;
-	private var gameOverText : h2d.Text;
+	private var pauseLayer : overlays.Pause;
+	private var gameOverLayer : overlays.Gameover;
 
 	////////////////////////////////////////////////////////////////////////////////////////
 	// SAW RELATED OBJECTS
@@ -128,31 +128,8 @@ class Game extends hxd.App {
 		uiLayer = new h2d.Object(s2d);
 		timerText = new h2d.Text(hxd.Res.fonts.choko.toFont(), uiLayer);
 		timerText.text = "000.000";
-
-		pauseLayer = new h2d.Object(uiLayer);
-		pauseText = new h2d.Text(hxd.Res.fonts.choko.toFont(), pauseLayer);
-		pauseText.textAlign = Center;
-		pauseText.text = "PAUSED";
-		pauseText.dropShadow = { 
-			dx : 6,
-			dy : 6,
-			color : 0x000000,
-			alpha : 0.9,
-		};
-		pauseLayer.alpha = 0;
-
-		gameOverLayer = new h2d.Object(uiLayer);
-		gameOverLayer.alpha = 0;
-		gameOverText = new h2d.Text(hxd.Res.fonts.choko.toFont(), gameOverLayer);
-		gameOverText.text = "GAME OVER";
-		gameOverText.textAlign = Center;
-		gameOverText.dropShadow = { 
-			dx : 6,
-			dy : 6,
-			color : 0x000000,
-			alpha : 0.9,
-		};
-
+		pauseLayer = new overlays.Pause(s2d);
+		gameOverLayer = new overlays.Gameover(s2d);
 
 		#if debug
 		changeGameState(Pause);
@@ -294,13 +271,8 @@ class Game extends hxd.App {
 		timerText.x = window.width / 2 - timerText.calcTextWidth("000.000")/2 * backgroundImage.scaleX * TIMERTEXTSCALEFACTOR;
 		timerText.y = 10; 
 
-		pauseText.setScale(0.5 * backgroundImage.scaleX);
-		pauseText.x = window.width/2;
-		pauseText.y = window.height/2 - pauseText.textHeight/2*backgroundImage.scaleX;
-
-		gameOverText.setScale(0.5 * backgroundImage.scaleX);
-		gameOverText.x = window.width/2;
-		gameOverText.y = window.height/2 - gameOverText.textHeight/2*backgroundImage.scaleX;
+		pauseLayer.resize(backgroundImage.scaleX);
+		gameOverLayer.resize(backgroundImage.scaleX);
 	}
 
 	////////////////////////////////////////////////////////////////////////////////////////
