@@ -48,7 +48,6 @@ class Target extends h2d.Object {
 			inactiveBitmap = new h2d.Bitmap(t, this);
 			inactiveBitmap.x = -t.width/2;
 			inactiveBitmap.y = -t.height/2;
-			inactiveBitmap.alpha = 1;
 		}
 		{
 			var tileSize = def.sprite.size;
@@ -57,7 +56,6 @@ class Target extends h2d.Object {
 			activeBitmap = new h2d.Bitmap(t, this);
 			activeBitmap.x = -t.width/2;
 			activeBitmap.y = -t.height/2;
-			activeBitmap.alpha = 0;
 		}
 
 		transitionTimer = new sn.Timer(TRANSITIONTIME, function() { transitioning = false; });
@@ -65,29 +63,40 @@ class Target extends h2d.Object {
 		this.x = x;
 		this.y = y;
 		setScale(baseScale * s);
+
+		reset();
 	}
 
 	public function update(dt : Float, humans : Array<game.Human>) {
 		if (transitioning) {
+			// updates the timer, which stops the transition effect.
 			transitionTimer.update(dt);
-			var factor = transitionTimer.timer / TRANSITIONTIME;
 
+			// fades between the two images.
+			var factor = transitionTimer.timer / TRANSITIONTIME;
 			if (transitioningToActive) {
 				activeBitmap.alpha = factor;
 				inactiveBitmap.alpha = 1 - factor;
 			} else {
-				activeBitmap.alpha = 1- factor;
+				activeBitmap.alpha = 1 - factor;
 				inactiveBitmap.alpha = factor;
-			} 
+			}
 		}
 
+		// checks each human to see if we should keep it active.
+		var shouldBeActive = false;
 		for (h in humans) {
 			if (bounds.width/2 * scaleX - x <= h.x && h.x <= bounds.width/2 * scaleX + x
 				&& bounds.height/2 * scaleY - y <= h.y && h.y <= bounds.height/2 * scaleY + y) 
 			{
 				setActive(true);
+				shouldBeActive = true;
 				break;
 			}
+		}
+
+		if (!shouldBeActive) {
+			setActive(false);
 		}
 	}
 
@@ -105,6 +114,14 @@ class Target extends h2d.Object {
 		boundGrid.right = edges.right;
 		boundGrid.bottom = edges.bottom;
 		boundGrid.top = edges.top;
+	}
+
+	public function reset() {
+		inactiveBitmap.alpha = 1;
+		activeBitmap.alpha = 0;
+		transitioning = false;
+		transitioningToActive = false;
+		transitionTimer.reset();
 	}
 
 	private function setActive(status : Bool) {

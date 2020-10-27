@@ -57,10 +57,10 @@
 					},
 					"speeds": {
 						"move": 60,
-						"rotation": 1
+						"rotation": 2
 					},
 					"collision": {
-						"fleshy": 7,
+						"fleshy": 5,
 						"walls": 7,
 						"randomness": 0
 					},
@@ -73,6 +73,38 @@
 						]
 					},
 					"spawnable": true
+				},
+				{
+					"name": "second",
+					"spawnable": true,
+					"collision": {
+						"fleshy": 5,
+						"walls": 7,
+						"randomness": 0.25
+					},
+					"scale": 0.5,
+					"spawn": {
+						"wait": 1,
+						"transparency": 0.5
+					},
+					"speeds": {
+						"move": 120,
+						"rotation": 4
+					},
+					"behavior": {
+						"wallCollision": [
+							0
+						],
+						"movement": [
+							0
+						]
+					},
+					"sprite": {
+						"file": "player-disc2.png",
+						"size": 16,
+						"x": 0,
+						"y": 0
+					}
 				}
 			],
 			"separators": [],
@@ -358,7 +390,7 @@
 						"y": 17
 					},
 					"radius": {
-						"fleshy": 5,
+						"fleshy": 4,
 						"wall": 5,
 						"vision": 30
 					},
@@ -417,6 +449,38 @@
 						"w": 27,
 						"h": 27
 					}
+				}
+			],
+			"separators": [],
+			"props": {}
+		},
+		{
+			"name": "misc",
+			"columns": [
+				{
+					"typeStr": "0",
+					"name": "name",
+					"scope": null
+				},
+				{
+					"typeStr": "14",
+					"name": "sprite"
+				},
+				{
+					"typeStr": "4",
+					"name": "scale"
+				}
+			],
+			"lines": [
+				{
+					"name": "mouseoverlay",
+					"sprite": {
+						"file": "mouseoverlay.png",
+						"size": 32,
+						"x": 0,
+						"y": 0
+					},
+					"scale": 1
 				}
 			],
 			"separators": [],

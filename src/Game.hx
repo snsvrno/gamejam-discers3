@@ -1,9 +1,3 @@
-import overlays.Gameover;
-import overlays.Pause;
-import h3d.shader.pbr.VolumeDecal.DecalOverlay;
-import h2d.Object;
-import game.Target;
-import hxd.res.Font;
 
 enum GameState {
 	Play; Pause; Done;
@@ -45,6 +39,8 @@ class Game extends hxd.App {
 	private var uiLayer : h2d.Object;
 	private var gameTimer : Float = 0;
 	private var timerText : h2d.Text;
+
+	private var sawgenOverlay : overlays.Sawgen;
 
 	private var pauseLayer : overlays.Pause;
 	private var gameOverLayer : overlays.Gameover;
@@ -113,7 +109,7 @@ class Game extends hxd.App {
 		loadBackgroundImage(level1);
 		
 		var tp = getPointInsideLevel(game.Target.SPAWNBUFFER * backgroundImage.scaleX);
-		target = new Target(tp.x, tp.y, backgroundImage.scaleX, backgroundEdges, s2d);
+		target = new game.Target(tp.x, tp.y, backgroundImage.scaleX, backgroundEdges, s2d);
 		humanLayer = new h2d.Object(s2d);
 		sawLayer = new h2d.Object(s2d);
 		effectsLayer = new h2d.Object(s2d);
@@ -126,6 +122,7 @@ class Game extends hxd.App {
 		#end
 
 		uiLayer = new h2d.Object(s2d);
+		sawgenOverlay = new overlays.Sawgen(uiLayer);
 		timerText = new h2d.Text(hxd.Res.fonts.choko.toFont(), uiLayer);
 		timerText.text = "000.000";
 		pauseLayer = new overlays.Pause(s2d);
@@ -141,6 +138,8 @@ class Game extends hxd.App {
 
 	override function update(dt : Float) {
 		super.update(dt);
+
+		sawgenOverlay.update(dt);
 
 		if (humans.length == 0) { changeGameState(Done); }
 
@@ -212,8 +211,12 @@ class Game extends hxd.App {
 					case _:
 				}
 			case EPush:
-				createSaw(event.relX, event.relY);
+				var saw = sawgenOverlay.createSaw(event.relX, event.relY, backgroundImage.scaleX, backgroundEdges, sawLayer);
+				if (saw != null) { saws.push(saw); }
 			
+			case EWheel:
+				sawgenOverlay.changeSaw(event.wheelDelta);
+
 			case _:
 		}
 	}
@@ -253,7 +256,22 @@ class Game extends hxd.App {
 	 * Restarts the game.
 	 */
 	private function restart() {
+		removeSaws();
+		gameTimer = 0;
+		timerText.text = "000.000";
+		gameState = Play;
 
+		
+		var tp = getPointInsideLevel(game.Target.SPAWNBUFFER * backgroundImage.scaleX);
+		target.x = tp.x;
+		target.y = tp.y;
+		target.reset();
+		
+		for (h in humans) {
+			var p = getPointInsideLevel(32);
+			h.x = p.x;
+			h.y = p.y;
+		}
 	}
 
 	private function gameOver() {
@@ -273,6 +291,8 @@ class Game extends hxd.App {
 
 		pauseLayer.resize(backgroundImage.scaleX);
 		gameOverLayer.resize(backgroundImage.scaleX);
+
+		sawgenOverlay.resize(backgroundImage.scaleX);
 	}
 
 	////////////////////////////////////////////////////////////////////////////////////////
@@ -287,13 +307,6 @@ class Game extends hxd.App {
 		for (s in saws) {
 			s.resize(backgroundImage.scaleX, backgroundEdges);
 		}
-	}
-
-	private function createSaw(x : Float, y : Float) {
-
-		var s = new game.Saw(base, x, y, backgroundImage.scaleX, backgroundEdges, sawLayer);
-		s.setDirectionAngle(Math.random() * Math.PI * 2);
-		saws.push(s);
 	}
 
 	/**
