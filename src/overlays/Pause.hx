@@ -4,6 +4,8 @@ class Pause extends h2d.Object {
 	
 	private var enabledColor : h3d.Vector = new h3d.Vector(0,1.0,0);
 	private var disabledColor : h3d.Vector = new h3d.Vector(1.0,0,0);
+	private var overColor : h3d.Vector = new h3d.Vector(0.70,0.7,1.0);
+	private var outColor : h3d.Vector = new h3d.Vector(1.0,1.0,1.0);
 
 	private var pauseText : h2d.Text;
 	private var background : h2d.Graphics;
@@ -88,6 +90,7 @@ class Pause extends h2d.Object {
 		player1Box = new h2d.Object(this);
 		var player1Text = new h2d.Text(Fonts.timer, player1Box);
 		player1Text.text = "Player 1";
+		player1Text.color = outColor;
 		player1Text.setScale(1);
 		player1Text.textAlign = Center;
 		player1Text.x = -100;
@@ -107,10 +110,17 @@ class Pause extends h2d.Object {
 				toggleUpdate(activeGeneration.player1, player1TextStatus);
 			}
 		}
+		interactive1.onOver = function (e : hxd.Event) {
+			player1Text.color = overColor;
+		};
+		interactive1.onOut = function (e : hxd.Event) {
+			player1Text.color = outColor;
+		};
 
 		player2Box = new h2d.Object(this);
 		var player2Text = new h2d.Text(Fonts.timer, player2Box);
 		player2Text.text = "Player 2";
+		player2Text.color = outColor;
 		player2Text.setScale(1);
 		player2Text.textAlign = Center;
 		player2Text.x = -100;
@@ -130,10 +140,17 @@ class Pause extends h2d.Object {
 				toggleUpdate(activeGeneration.player2, player2TextStatus);
 			}
 		}
+		interactive2.onOver = function (e : hxd.Event) {
+			player2Text.color = overColor;
+		};
+		interactive2.onOut = function (e : hxd.Event) {
+			player2Text.color = outColor;
+		};
 
 		aiHumansBox = new h2d.Object(this);
 		var aiHumansText = new h2d.Text(Fonts.timer, aiHumansBox);
 		aiHumansText.text = "# of AI Humans";
+		aiHumansText.color = outColor;
 		aiHumansText.setScale(1);
 		aiHumansText.textAlign = Center;
 		aiHumansText.x = -100;
@@ -154,10 +171,17 @@ class Pause extends h2d.Object {
 			if (activeGeneration.aiHumans <= 0) { activeGeneration.aiHumans = 0; }
 			aiHumansTextStatus.text = '${activeGeneration.aiHumans}';
 		}
+		interactive3.onOver = function (e : hxd.Event) {
+			aiHumansText.color = overColor;
+		};
+		interactive3.onOut = function (e : hxd.Event) {
+			aiHumansText.color = outColor;
+		};
 
 		restartWithSettingsButton = new h2d.Object(this);
 		var restartWithSettingsButtonText = new h2d.Text(Fonts.timer, restartWithSettingsButton);
 		restartWithSettingsButtonText.text = "Restart with These Settings";
+		restartWithSettingsButtonText.color = outColor;
 		restartWithSettingsButtonText.setScale(1);
 		restartWithSettingsButtonText.textAlign = Right;
 		restartWithSettingsButtonText.x = -10;
@@ -167,6 +191,12 @@ class Pause extends h2d.Object {
 		interactiveRestart.y = -50;
 		interactiveRestart.onClick = function (e : hxd.Event) { 
 			newSettingsReady = true;
+		};
+		interactiveRestart.onOver = function (e : hxd.Event) {
+			restartWithSettingsButtonText.color = overColor;
+		};
+		interactiveRestart.onOut = function (e : hxd.Event) {
+			restartWithSettingsButtonText.color = outColor;
 		};
 		
 		alpha = 0;
@@ -211,7 +241,7 @@ class Pause extends h2d.Object {
 
 		restartText.setScale(0.5 * s);
 		restartText.x = window.width/2;
-		restartText.y = window.height/4 * 3 - restartText.textHeight / 2 * s;
+		restartText.y = window.height/6 * 5 - restartText.textHeight / 2 * s;
 
 		title.setScale(0.25 * s);
 		subtitle.setScale(0.15 * s);

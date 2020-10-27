@@ -4,6 +4,8 @@ class Sawgen extends h2d.Object {
 
 	private static inline var PADDING : Float = 2;
 	private static inline var ROTFACTOR : Float = 0.5;
+	private static inline var SCROLLWAIT : Float = 0.1; // how many seconds to wait when scrolling before registering it.
+
 
 	private var scaleFactor : Float;
 
@@ -16,6 +18,7 @@ class Sawgen extends h2d.Object {
 	private var backgroundSprite : h2d.Bitmap;
 
 	private var timer : Float = 0;
+	private var scrollWaitTimer : Float = 0;
 	private var pattern : Array<game.GenerationState.PatternInstruction> = [];
 
 	public function new(?parent : h2d.Object) {
@@ -76,6 +79,9 @@ class Sawgen extends h2d.Object {
 	}
 
 	public function changeSaw(direction : Float) {
+		// has the scroll wait.
+		if (scrollWaitTimer != 0) { return; }
+
 		if (direction > 0) {
 			if (selectedSaw < listOSaws.length - 1) { setSelected(selectedSaw + 1); }
 			else { setSelected(0); }
@@ -83,11 +89,19 @@ class Sawgen extends h2d.Object {
 			if (selectedSaw == 0) { setSelected(listOSaws.length-1); }
 			else { setSelected(selectedSaw - 1); }
 		}
+		scrollWaitTimer = SCROLLWAIT;
 	}
 
 	public function update(dt : Float) {
 		selectedImage.rotate(dt * ROTFACTOR);
 		timer += dt;
+
+		if (scrollWaitTimer != 0) { 
+			scrollWaitTimer -= dt; 
+			if (scrollWaitTimer < 0) {
+				scrollWaitTimer = 0;
+			}
+		}
 	}
 
 	public function reset() {
