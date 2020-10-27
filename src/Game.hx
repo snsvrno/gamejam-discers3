@@ -1,6 +1,6 @@
 
 enum GameState {
-	Play; Pause; Done;
+	Play; Pause; Done; PlayerSelect;
 }
 
 typedef Edges = { left : Float, top : Float, right : Float, bottom : Float };
@@ -19,7 +19,7 @@ class Game extends hxd.App {
 	/**
 	 * Timer Text scale factor
 	 */
-	 private static inline var TIMERTEXTSCALEFACTOR : Float = 0.25;
+	 private static inline var TIMERTEXTSCALEFACTOR : Float = 0.5;
 	 
 	////////////////////////////////////////////////////////////////////////////////////////
 	// STATIC MEMBERS
@@ -85,11 +85,16 @@ class Game extends hxd.App {
 	private var debugCollisionsOverlay : h2d.Graphics;
 	#end
 
+	private var lastGenerationState : game.GenerationState;
+
 	////////////////////////////////////////////////////////////////////////////////////////
 	// STANDARD OBJECT FUNCTIONS
 
 	override function init() {
 		initalizeResources();
+
+		// creates the default generation state.
+		lastGenerationState = new game.GenerationState();
 
 		super.init();
 		instance = this;
@@ -108,14 +113,22 @@ class Game extends hxd.App {
 
 		loadBackgroundImage(level1);
 		
-		var tp = getPointInsideLevel(game.Target.SPAWNBUFFER * backgroundImage.scaleX);
+		//var tp = getPointInsideLevel(game.Target.SPAWNBUFFER * backgroundImage.scaleX);
+		var tp = { 
+			x : (backgroundEdges.right - backgroundEdges.left) / 2 + backgroundEdges.left, 
+			y : (backgroundEdges.top - backgroundEdges.bottom) / 2 + backgroundEdges.bottom,
+		};
 		target = new game.Target(tp.x, tp.y, backgroundImage.scaleX, backgroundEdges, s2d);
 		humanLayer = new h2d.Object(s2d);
 		sawLayer = new h2d.Object(s2d);
 		effectsLayer = new h2d.Object(s2d);
 
+		/*
 		var p = getPointInsideLevel(32);
-		humans.push(new game.Human(p.x, p.y, backgroundImage.scaleX, simple, backgroundEdges, humanLayer));
+		var human = new game.Human(p.x, p.y, backgroundImage.scaleX, simple, backgroundEdges, humanLayer);
+		human.setPlayable();
+		humans.push(human);
+		*/
 
 		#if debug
 		s2d.addChild(debugOverlay);
@@ -123,22 +136,20 @@ class Game extends hxd.App {
 
 		uiLayer = new h2d.Object(s2d);
 		sawgenOverlay = new overlays.Sawgen(uiLayer);
-		timerText = new h2d.Text(hxd.Res.fonts.choko.toFont(), uiLayer);
+		timerText = new h2d.Text(Fonts.timer, uiLayer);
 		timerText.text = "000.000";
-		pauseLayer = new overlays.Pause(s2d);
+		timerText.dropShadow = { dx : 0, dy : 2, color: 0x000000, alpha : 0.8 };
+		pauseLayer = new overlays.Pause(lastGenerationState, s2d);
 		gameOverLayer = new overlays.Gameover(s2d);
 
-		#if debug
+		executeGeneration();
 		changeGameState(Pause);
-		#else
-		changeGameState(Play);
-		#end
+
 		onResize(); // trigger all the sizing
 	}
 
 	override function update(dt : Float) {
 		super.update(dt);
-
 		sawgenOverlay.update(dt);
 
 		if (humans.length == 0) { changeGameState(Done); }
@@ -171,8 +182,16 @@ class Game extends hxd.App {
 
 				target.update(dt, humans);
 
+
+			case Pause:
+				// check if we have an updated gamestate
+				if (pauseLayer.newSettingsReady) {
+					pauseLayer.newSettingsReady = false;
+					restart();
+				}
+
 			case unknown:
-				trace('unimplemented game state in update: $unknown');
+				
 		}
 	}
 
@@ -210,19 +229,66 @@ class Game extends hxd.App {
 						restart();
 					case _:
 				}
+
+				if (gameState == Play) {
+					for (h in humans) { h.onKeyPressed(event.keyCode); }
+				}
+			case EKeyUp:
+				if (gameState == Play) {
+					for (h in humans) { h.onKeyReleased(event.keyCode); }
+				}
 			case EPush:
-				var saw = sawgenOverlay.createSaw(event.relX, event.relY, backgroundImage.scaleX, backgroundEdges, sawLayer);
-				if (saw != null) { saws.push(saw); }
+				if (gameState == Play) {
+					var saw = sawgenOverlay.createSaw(event.relX, event.relY, backgroundImage.scaleX, backgroundEdges, sawLayer);
+					if (saw != null) { saws.push(saw); }
+				}
 			
 			case EWheel:
-				sawgenOverlay.changeSaw(event.wheelDelta);
+				if (gameState == Play) {
+					sawgenOverlay.changeSaw(event.wheelDelta);
+				}
 
 			case _:
 		}
 	}
 
-	private function changeGameState(newState : GameState) {
+	private function executeGeneration() {
+		
+		// set the target position
+		var tp = { 
+			x : (backgroundEdges.right - backgroundEdges.left) / 2 + backgroundEdges.left, 
+			y : (backgroundEdges.top - backgroundEdges.bottom) / 2 + backgroundEdges.bottom,
+		};
+		target.x = tp.x;
+		target.y = tp.y;
+		
+		for (i in 0 ... lastGenerationState.aiHumans) {
+			// create the ai humans.
+			var p = getPointInsideLevel(32);
+			humans.push(new game.Human(p.x, p.y, backgroundImage.scaleX, simple, backgroundEdges, humanLayer));
+		}
 
+		if (lastGenerationState.player1) {
+			var p = getPointInsideLevel(32);
+			var human = new game.Human(p.x, p.y, backgroundImage.scaleX, simple, backgroundEdges, humanLayer);
+			human.setPlayable(1);
+			humans.push(human);
+			
+		}
+
+		if (lastGenerationState.player2) {
+			var p = getPointInsideLevel(32);
+			var human = new game.Human(p.x, p.y, backgroundImage.scaleX, simple, backgroundEdges, humanLayer);
+			human.setPlayable(2);
+			humans.push(human);
+
+		}
+
+		changeGameState(Play);
+	}
+
+	private function changeGameState(newState : GameState) {
+		trace(newState, gameState);
 		if (gameState == null) { gameState = newState; return; }
 
 		var oldState = gameState;
@@ -238,6 +304,9 @@ class Game extends hxd.App {
 		switch(oldState) {
 			case Pause: 
 				pauseLayer.alpha = 0;
+
+			case Done:
+				
 			case _:
 		}
 
@@ -256,22 +325,20 @@ class Game extends hxd.App {
 	 * Restarts the game.
 	 */
 	private function restart() {
-		removeSaws();
+		removeSaws(true);
+		removeHumans(true);
 		gameTimer = 0;
 		timerText.text = "000.000";
-		gameState = Play;
 
-		
-		var tp = getPointInsideLevel(game.Target.SPAWNBUFFER * backgroundImage.scaleX);
-		target.x = tp.x;
-		target.y = tp.y;
+		pauseLayer.alpha = 0;
+		gameOverLayer.alpha = 0;
+
+		//var tp = getPointInsideLevel(game.Target.SPAWNBUFFER * backgroundImage.scaleX);
+		//target.x = tp.x;
+		//target.y = tp.y;
 		target.reset();
-		
-		for (h in humans) {
-			var p = getPointInsideLevel(32);
-			h.x = p.x;
-			h.y = p.y;
-		}
+
+		executeGeneration();
 	}
 
 	private function gameOver() {
@@ -287,7 +354,7 @@ class Game extends hxd.App {
 
 		timerText.setScale(TIMERTEXTSCALEFACTOR * backgroundImage.scaleX);
 		timerText.x = window.width / 2 - timerText.calcTextWidth("000.000")/2 * backgroundImage.scaleX * TIMERTEXTSCALEFACTOR;
-		timerText.y = 10; 
+		timerText.y = 6; 
 
 		pauseLayer.resize(backgroundImage.scaleX);
 		gameOverLayer.resize(backgroundImage.scaleX);
@@ -312,10 +379,16 @@ class Game extends hxd.App {
 	/**
 	 * Checks all saws, removes the ones that we don't need anymore.
 	 */
-	private function removeSaws() {
+	private function removeSaws(?forced : Bool = false) {
 		var i = saws.length - 1;
 		while(i >= 0) {
-			if (saws[i].queueForDeletion) {
+			if (saws[i].queueForDeletion || forced) {
+
+				for (ns in saws[i].newSaws) {
+					sawLayer.addChild(ns);
+					saws.push(ns);
+				}
+
 				sawLayer.removeChild(saws[i]);
 				saws.remove(saws[i]);
 			}
@@ -366,10 +439,10 @@ class Game extends hxd.App {
 	/**
 	 * Checks all effects, removes the ones that we don't need anymore. 
 	 */
-	 private function removeHumans() {
+	 private function removeHumans(?force : Bool = false) {
 		var i = humans.length - 1;
 		while(i >= 0) {
-			if (humans[i].queueForDeletion) {
+			if (humans[i].queueForDeletion || force) {
 				humanLayer.removeChild(humans[i]);
 				humans.remove(humans[i]);
 			}
@@ -513,6 +586,8 @@ class Game extends hxd.App {
 		#else
 		hxd.Res.initLocal();
 		#end
+
+		Fonts.init();
 
 		// loads the castledb resource file.
 		Data.load(hxd.Res.data.entry.getText());

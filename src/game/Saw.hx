@@ -10,6 +10,8 @@ enum Wall {
 
 class Saw extends h2d.Object {
 
+	private inline static var FANANGLE : Float = 45 / 180 * 3.14;
+
 	/**
 	 * The period of time where the saw is inactive, and doesn't do anything.
 	 */
@@ -23,6 +25,8 @@ class Saw extends h2d.Object {
 	// the world height and width, so we can properly scare the objects
 	// coordinates when resizing.
 	private var boundGrid : Game.Edges;
+
+	public var newSaws(default, null) : Array<game.Saw> = [];
 
 	/**
 	 * Rotational speed of the saw.
@@ -229,10 +233,34 @@ class Saw extends h2d.Object {
 			switch(wallCollisionBehavior) {
 				case Bounce: wallCollisionBounce(impact);
 				case Dispose: wallCollisionDispose(impact);
+				case Spawn(kind, count):
+					for (i in 0 ... count) {
+						var s = new game.Saw(kind.name, x, y, scaleX / baseScale, boundGrid);
+						newSaws.push(s);
+						s.direction.x = direction.x * -1;
+						s.direction.y = direction.y * -1;
+						
+						if (i > 0) {
+							if (i % 2 == 1) {
+								s.rotateDirection(FANANGLE / i);
+							} else {
+								s.rotateDirection(-FANANGLE / (i-1));
+							}
+						}
+					}
+					wallCollisionDispose(impact);
 				case unknown:
 					trace('unhandled wall collision behavior: $unknown');
 			}
 		}
+	}
+
+	private function rotateDirection(angle : Float) {
+		var oAngle = sn.Math.getAngle(direction.x, direction.y);
+
+		var newAngle = oAngle + angle;
+		direction.x = Math.cos(newAngle);
+		direction.y = Math.sin(newAngle);
 	}
 
 	/**

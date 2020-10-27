@@ -9,6 +9,10 @@
 					"scope": null
 				},
 				{
+					"typeStr": "1",
+					"name": "description"
+				},
+				{
 					"typeStr": "2",
 					"name": "spawnable",
 					"documentation": "can this saw type be chosen by the player."
@@ -72,7 +76,8 @@
 							0
 						]
 					},
-					"spawnable": true
+					"spawnable": true,
+					"description": "Basic Saw"
 				},
 				{
 					"name": "second",
@@ -82,18 +87,20 @@
 						"walls": 7,
 						"randomness": 0.25
 					},
-					"scale": 0.5,
+					"scale": 0.75,
 					"spawn": {
 						"wait": 1,
 						"transparency": 0.5
 					},
 					"speeds": {
-						"move": 120,
+						"move": 100,
 						"rotation": 4
 					},
 					"behavior": {
 						"wallCollision": [
-							0
+							1,
+							"third",
+							4
 						],
 						"movement": [
 							0
@@ -104,7 +111,41 @@
 						"size": 16,
 						"x": 0,
 						"y": 0
-					}
+					},
+					"description": "Shrapnel Saw"
+				},
+				{
+					"name": "third",
+					"spawnable": false,
+					"collision": {
+						"fleshy": 0,
+						"walls": 0,
+						"randomness": 0
+					},
+					"scale": 0.25,
+					"spawn": {
+						"wait": 0,
+						"transparency": 0
+					},
+					"speeds": {
+						"move": 180,
+						"rotation": 6
+					},
+					"behavior": {
+						"wallCollision": [
+							2
+						],
+						"movement": [
+							0
+						]
+					},
+					"sprite": {
+						"file": "player-disc2.png",
+						"size": 16,
+						"x": 0,
+						"y": 0
+					},
+					"description": "the Shrapnel"
 				}
 			],
 			"separators": [],
@@ -714,6 +755,19 @@
 				{
 					"name": "Bounce",
 					"args": []
+				},
+				{
+					"name": "Spawn",
+					"args": [
+						{
+							"name": "kind",
+							"typeStr": "6:blades"
+						},
+						{
+							"name": "count",
+							"typeStr": "3"
+						}
+					]
 				},
 				{
 					"name": "Dispose",

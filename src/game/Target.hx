@@ -86,8 +86,9 @@ class Target extends h2d.Object {
 		// checks each human to see if we should keep it active.
 		var shouldBeActive = false;
 		for (h in humans) {
-			if (bounds.width/2 * scaleX - x <= h.x && h.x <= bounds.width/2 * scaleX + x
-				&& bounds.height/2 * scaleY - y <= h.y && h.y <= bounds.height/2 * scaleY + y) 
+
+			if (h.x - bounds.width/2 * scaleX <= x && x <= bounds.width/2 * scaleX + h.x
+				&& h.y - bounds.height/2 * scaleY <= y && y <= bounds.height/2 * scaleY + h.y) 
 			{
 				setActive(true);
 				shouldBeActive = true;

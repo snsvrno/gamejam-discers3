@@ -8,6 +8,9 @@ class Human extends h2d.Object {
 
 	private var currentAnimation : String;
 
+	// if the human is player controlled.
+	private var movementMatrix : { u : Int, d : Int, l : Int, r : Int } = { u : 0, d : 0, l : 0, r : 0 };
+
 	private var animations : Map<String, h2d.Anim> = new Map();
 	private var avoidThesePoints : Array<{ x : Float, y : Float }> = [];
 	private var targetPoint : Null<{x : Float, y : Float}> = null;
@@ -29,6 +32,10 @@ class Human extends h2d.Object {
 	private var collisionRadius : Float;
 
 	private var baseScale : Float;
+
+	private var humanPlayer : Bool = false;
+	private var humanPlayerNumber : Int;
+	private var humanColor : h3d.Vector;
 
 	/**
 	 * switch so we know we no longer want this piece around.
@@ -58,6 +65,63 @@ class Human extends h2d.Object {
 		setScale(baseScale * s);
 	}
 
+	/**
+	 * Makes the human controlable by a player.
+	 */
+	public function setPlayable(playerNumber : Int) {
+		humanPlayer = true;
+		humanPlayerNumber = playerNumber;
+		humanColor = new h3d.Vector(Math.random(),Math.random(),Math.random());
+		
+		for (a in animations) {
+			a.color = humanColor;
+		}
+	}
+
+	public function onKeyPressed(key : Int) {
+		if (humanPlayer == false) { return; }
+
+		if (humanPlayerNumber == 1) {
+			switch (key) {
+				case hxd.Key.W: movementMatrix.u = 1;
+				case hxd.Key.A: movementMatrix.l = 1;
+				case hxd.Key.S: movementMatrix.d = 1;
+				case hxd.Key.D: movementMatrix.r = 1;
+				case _:
+			}
+		} else if (humanPlayerNumber == 2) {
+			switch (key) {
+				case hxd.Key.UP: movementMatrix.u = 1;
+				case hxd.Key.LEFT: movementMatrix.l = 1;
+				case hxd.Key.DOWN: movementMatrix.d = 1;
+				case hxd.Key.RIGHT: movementMatrix.r = 1;
+				case _:
+			}
+		}
+	}
+
+	public function onKeyReleased(key : Int) {
+		if (humanPlayer == false) { return; }
+
+		if (humanPlayerNumber == 1) {
+			switch (key) {
+				case hxd.Key.W: movementMatrix.u = 0;
+				case hxd.Key.A: movementMatrix.l = 0;
+				case hxd.Key.S: movementMatrix.d = 0;
+				case hxd.Key.D: movementMatrix.r = 0;
+				case _:
+			}
+		} else if (humanPlayerNumber == 2) {
+			switch (key) {
+				case hxd.Key.UP: movementMatrix.u = 0;
+				case hxd.Key.LEFT: movementMatrix.l = 0;
+				case hxd.Key.DOWN: movementMatrix.d = 0;
+				case hxd.Key.RIGHT: movementMatrix.r = 0;
+				case _:
+			}
+		}
+	}
+
 	public function resize(s : Float, edges : Game.Edges) {
 		// changes the visual scale.
 		setScale(baseScale * s);
@@ -75,14 +139,31 @@ class Human extends h2d.Object {
 	}
 
 	public function update(dt: Float) {
-		if (avoidThesePoints.length == 0 && targetPoint != null) {
-			var distance = sn.Math.distance(targetPoint.x - x, targetPoint.y -y);
-			if (distance <= TARGETDEADBAND * scaleX) {
-				setAnimation("idle");
-				return;
+
+		if (humanPlayer) {
+
+			direction.x = (movementMatrix.r - movementMatrix.l);
+			direction.y = (movementMatrix.d - movementMatrix.u);
+
+			if (direction.x != 0 && direction.y != 0) {
+				// normalizing it.
+				var distance = sn.Math.distance(direction.x, direction.y);
+				direction.x /= distance;
+				direction.y /= distance;
 			}
+
+		} else {
+
+			if (avoidThesePoints.length == 0 && targetPoint != null) {
+				var distance = sn.Math.distance(targetPoint.x - x, targetPoint.y -y);
+				if (distance <= TARGETDEADBAND * scaleX) {
+					setAnimation("idle");
+					return;
+				}
+			}
+
+			adjustDirection();
 		}
-		adjustDirection();
 
 		x += direction.x * movementSpeed * dt * scaleX;
 		y += direction.y * movementSpeed * dt * scaleY;
@@ -213,6 +294,8 @@ class Human extends h2d.Object {
 			// offsetting it so its centered when we move around the player object.
 			newAnimation.x = - def.center.x;
 			newAnimation.y = - def.center.y;
+
+			newAnimation.color = new h3d.Vector(0,0,0);
 
 			animations.set(a.name, newAnimation);
 		}
