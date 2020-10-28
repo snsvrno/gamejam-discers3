@@ -3,6 +3,7 @@ package game;
 class Human extends h2d.Object {
 
 	private static inline var TARGETDEADBAND : Float = 20; 
+	public static inline var HUMANBUBBLE : Float = 10;
 
 	private var boundGrid : Game.Edges; // the bourd boundaries, used for scaling position when resizing.
 

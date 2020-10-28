@@ -15,6 +15,8 @@ class Game extends hxd.App {
 	 */
 	private static inline var LEVELSCREENPADDING : Int = 10;
 
+	private static inline var VERSION : String = "GAMEJAMv5_2020.10.28";
+
 	private static inline var SCORECOUNTLIMIT : Int = 6;
 
 	/**
@@ -48,6 +50,8 @@ class Game extends hxd.App {
 
 	private var pauseLayer : overlays.Pause;
 	private var gameOverLayer : overlays.Gameover;
+
+	private var versionText : h2d.Text;
 
 	////////////////////////////////////////////////////////////////////////////////////////
 	// SAW RELATED OBJECTS
@@ -141,12 +145,7 @@ class Game extends hxd.App {
 		sawLayer = new h2d.Object(s2d);
 		effectsLayer = new h2d.Object(s2d);
 
-		/*
-		var p = getPointInsideLevel(32);
-		var human = new game.Human(p.x, p.y, backgroundImage.scaleX, simple, backgroundEdges, humanLayer);
-		human.setPlayable();
-		humans.push(human);
-		*/
+		
 
 		#if debug
 		s2d.addChild(debugOverlay);
@@ -162,6 +161,12 @@ class Game extends hxd.App {
 		currentScoreBoard = new h2d.Object(uiLayer);
 		currentScoreBoard.x = 20;
 		currentScoreBoard.y = 10;
+
+		versionText = new h2d.Text(Fonts.timer, s2d);
+		versionText.setScale(0.15 * backgroundImage.scaleX);
+		versionText.text = "v" + VERSION;
+		versionText.x = 10;
+		versionText.alpha = 0.25;
 
 		executeGeneration();
 		changeGameState(Pause);
@@ -197,6 +202,7 @@ class Game extends hxd.App {
 				sawCollisions(); // check if saws hit walls.
 
 				humanAvoidsSaws(); // tells the humans where the saws are this frame.
+				humanHumanCollisions();
 				for (h in humans) { h.goToPoint(target.x, target.y); }
 				for (h in humans) { h.update(dt); }
 				humanCollisions();
@@ -491,6 +497,9 @@ class Game extends hxd.App {
 		gameOverLayer.resize(backgroundImage.scaleX);
 
 		sawgenOverlay.resize(backgroundImage.scaleX);
+
+		versionText.setScale(0.15 * backgroundImage.scaleX);
+		versionText.y = window.height - versionText.font.lineHeight * versionText.scaleY - 3;
 	}
 
 	////////////////////////////////////////////////////////////////////////////////////////
@@ -547,6 +556,27 @@ class Game extends hxd.App {
 				if (distance < h.hitRadius * h.scaleX + s.hitRadius * s.scaleX) {
 					h.hit();
 				}
+			}
+		}
+	}
+
+	/**
+	 * making the human ai avoid each other.
+	 */
+	private function humanHumanCollisions() {
+		for (i in 0 ... humans.length) {
+			for (j in i+1 ... humans.length) {
+
+				// only do this for AI.
+				if (humans[i].humanPlayer) { continue; }
+
+				var distance = sn.Math.distance(humans[i].x - humans[j].x, humans[i].y - humans[j].y);
+				if (distance < humans[i].scaleX * game.Human.HUMANBUBBLE) {
+					var d = sn.Math.direction(humans[j].x - humans[i].x, humans[j].y - humans[i].y);
+					humans[i].x = humans[j].x + d.x * humans[i].scaleX * game.Human.HUMANBUBBLE;
+					humans[i].y = humans[j].y + d.y * humans[i].scaleY * game.Human.HUMANBUBBLE;
+				}
+
 			}
 		}
 	}
