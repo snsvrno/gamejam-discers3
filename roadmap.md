@@ -9,10 +9,10 @@ List of tasks to complete in order to complete the whole image for this game.
 
 ## 2 Player
 
-- [ ] ability to play with 2 people.
-- [ ] joystick controls the Human
-- [ ] keyboard controls the Human
-- [ ] mouse controls the Room
+- [x] ability to play with 2 people.
+- [x] keyboard controls the Human 1
+- [x] keyboard controls the Human 2
+- [x] mouse controls the Room
 - [ ] mouse + keyboard controls the Room
 
 ## Room Recording

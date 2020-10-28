@@ -15,7 +15,7 @@ class Fonts {
 	private static function get_timer() { return instance._timer; }
 
 	public function new() {
-		_normal= hxd.Res.fonts.cokobi_16.toFont();
+		_normal= hxd.Res.fonts.comic_32.toFont();
 		_title = hxd.Res.fonts.cokobi_64.toFont();
 		_timer = hxd.Res.fonts.cokobi_32.toFont();
 	}

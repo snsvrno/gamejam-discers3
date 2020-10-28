@@ -2,7 +2,7 @@ package game;
 
 class Human extends h2d.Object {
 
-	private static inline var TARGETDEADBAND : Float = 4; 
+	private static inline var TARGETDEADBAND : Float = 20; 
 
 	private var boundGrid : Game.Edges; // the bourd boundaries, used for scaling position when resizing.
 
@@ -33,9 +33,9 @@ class Human extends h2d.Object {
 
 	private var baseScale : Float;
 
-	private var humanPlayer : Bool = false;
-	private var humanPlayerNumber : Int;
-	private var humanColor : h3d.Vector;
+	public var humanPlayer(default, null) : Bool = false;
+	public var humanPlayerNumber(default, null) : Int;
+	public var humanColor(default, null) : h3d.Vector;
 
 	/**
 	 * switch so we know we no longer want this piece around.

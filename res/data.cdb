@@ -47,7 +47,7 @@
 			],
 			"lines": [
 				{
-					"name": "base",
+					"name": "simple",
 					"sprite": {
 						"file": "player-disc.png",
 						"size": 16,
@@ -80,7 +80,7 @@
 					"description": "Basic Saw"
 				},
 				{
-					"name": "second",
+					"name": "fracture",
 					"spawnable": true,
 					"collision": {
 						"fleshy": 5,
@@ -99,7 +99,7 @@
 					"behavior": {
 						"wallCollision": [
 							1,
-							"third",
+							"fractured",
 							4
 						],
 						"movement": [
@@ -112,10 +112,10 @@
 						"x": 0,
 						"y": 0
 					},
-					"description": "Shrapnel Saw"
+					"description": "Fracturing Saw"
 				},
 				{
-					"name": "third",
+					"name": "fractured",
 					"spawnable": false,
 					"collision": {
 						"fleshy": 0,

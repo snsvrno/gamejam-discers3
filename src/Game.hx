@@ -1,4 +1,3 @@
-
 enum GameState {
 	Play; Pause; Done; PlayerSelect;
 }
@@ -16,6 +15,8 @@ class Game extends hxd.App {
 	 */
 	private static inline var LEVELSCREENPADDING : Int = 10;
 
+	private static inline var SCORECOUNTLIMIT : Int = 6;
+
 	/**
 	 * Timer Text scale factor
 	 */
@@ -32,13 +33,16 @@ class Game extends hxd.App {
 
 	private var gameState : GameState;
 	private var target : game.Target;
-	
+	private var lastGenerationState : game.GenerationState;
+	private var loadstring : Null<String> = null; // the load string we get from the json.
+
 	////////////////////////////////////////////////////////////////////////////////////////
 	// UI RELATED OBJECTS
 	
 	private var uiLayer : h2d.Object;
 	private var gameTimer : Float = 0;
 	private var timerText : h2d.Text;
+	private var currentScoreBoard : h2d.Object;
 
 	private var sawgenOverlay : overlays.Sawgen;
 
@@ -56,6 +60,7 @@ class Game extends hxd.App {
 
 	private var humans : Array<game.Human> = [];
 	private var humanLayer : h2d.Object;
+	private var deadHumans : Array<{p1 : Bool, p2 : Bool, time : Float, color : h3d.Vector}> = [];
 
 	////////////////////////////////////////////////////////////////////////////////////////
 	// EFFECTS RELATED OBJECTS
@@ -85,16 +90,29 @@ class Game extends hxd.App {
 	private var debugCollisionsOverlay : h2d.Graphics;
 	#end
 
-	private var lastGenerationState : game.GenerationState;
-
 	////////////////////////////////////////////////////////////////////////////////////////
 	// STANDARD OBJECT FUNCTIONS
+
+	public function new(loadstring : Null<String>) {
+		super();
+
+		this.loadstring = loadstring;
+	}
 
 	override function init() {
 		initalizeResources();
 
-		// creates the default generation state.
 		lastGenerationState = new game.GenerationState();
+		if (loadstring != null) {
+			// parse it.
+			var loadedSets = game.GenerationState.parsePatternSets(loadstring);
+			lastGenerationState.patternSets = loadedSets;
+		} else {
+			// generate a few sample ones. 
+			for (i in 0 ... 2) {
+				lastGenerationState.patternSets.push(game.GenerationState.generateTestPattern()); 
+			}
+		}
 
 		super.init();
 		instance = this;
@@ -141,6 +159,9 @@ class Game extends hxd.App {
 		timerText.dropShadow = { dx : 0, dy : 2, color: 0x000000, alpha : 0.8 };
 		pauseLayer = new overlays.Pause(lastGenerationState, s2d);
 		gameOverLayer = new overlays.Gameover(s2d);
+		currentScoreBoard = new h2d.Object(uiLayer);
+		currentScoreBoard.x = 20;
+		currentScoreBoard.y = 10;
 
 		executeGeneration();
 		changeGameState(Pause);
@@ -150,12 +171,14 @@ class Game extends hxd.App {
 
 	override function update(dt : Float) {
 		super.update(dt);
-		sawgenOverlay.update(dt);
-
-		if (humans.length == 0) { changeGameState(Done); }
 
 		switch(gameState) {
 			case Play:
+
+				if (humans.length == 0) { changeGameState(Done); }
+
+				var newSaw = sawgenOverlay.update(dt, backgroundImage.scaleX, backgroundEdges, sawLayer);
+				if (newSaw != null) { saws.push(newSaw); }
 
 				if (target.active) { 
 					gameTimer += dt;
@@ -222,6 +245,13 @@ class Game extends hxd.App {
 				}
 				#end
 
+				#if js
+				if (event.keyCode == hxd.Key.QWERTY_TILDE) {
+					var storage = js.Browser.getLocalStorage();
+					storage.clear();
+				}
+				#end
+
 				switch(event.keyCode) {
 					case hxd.Key.SPACE:
 						changeGameState(Pause);
@@ -233,12 +263,24 @@ class Game extends hxd.App {
 				if (gameState == Play) {
 					for (h in humans) { h.onKeyPressed(event.keyCode); }
 				}
+
+				if (sawgenOverlay.aiControlled == false) {
+					switch(event.keyCode) {
+						case hxd.Key.QWERTY_MINUS | hxd.Key.NUMPAD_SUB:
+							sawgenOverlay.changeSaw(-1);
+						case hxd.Key.QWERTY_EQUALS | hxd.Key.NUMPAD_ADD:
+							sawgenOverlay.changeSaw(1);
+						case _:
+					}
+				}
+
 			case EKeyUp:
 				if (gameState == Play) {
 					for (h in humans) { h.onKeyReleased(event.keyCode); }
 				}
+
 			case EPush:
-				if (gameState == Play) {
+				if (gameState == Play && sawgenOverlay.aiControlled == false) {
 					var saw = sawgenOverlay.createSaw(event.relX, event.relY, backgroundImage.scaleX, backgroundEdges, sawLayer);
 					if (saw != null) { saws.push(saw); }
 				}
@@ -284,11 +326,26 @@ class Game extends hxd.App {
 
 		}
 
+		// gives ai the room
+		if (lastGenerationState.isRoomAPlayer == false) {
+			if (lastGenerationState.patternSets.length == 0) {
+				sawgenOverlay.setHumanControl();
+				lastGenerationState.isRoomAPlayer = true;
+			} else {
+				var activePattern = lastGenerationState.patternSets[lastGenerationState.activePattern];
+				sawgenOverlay.setAiControl(activePattern.pattern, lastGenerationState.randomRoomPlacement);
+			}
+		} else {
+			sawgenOverlay.setHumanControl();
+		}
+
 		changeGameState(Play);
 	}
 
 	private function changeGameState(newState : GameState) {
+		#if debug
 		trace(newState, gameState);
+		#end
 		if (gameState == null) { gameState = newState; return; }
 
 		var oldState = gameState;
@@ -303,7 +360,8 @@ class Game extends hxd.App {
 		// do we need to do any thing specific leaving the state?
 		switch(oldState) {
 			case Pause: 
-				pauseLayer.alpha = 0;
+				pauseLayer.setVisible(false);
+				sawgenOverlay.alpha = 1;
 
 			case Done:
 				
@@ -313,7 +371,8 @@ class Game extends hxd.App {
 		// do we need to do any thing specific going into the state.?
 		switch(gameState) {
 			case Pause:
-				pauseLayer.alpha = 1;
+				pauseLayer.setVisible(true);
+				sawgenOverlay.alpha = 0;
 			case Done:
 				gameOver();
 			case _:
@@ -327,10 +386,11 @@ class Game extends hxd.App {
 	private function restart() {
 		removeSaws(true);
 		removeHumans(true);
+
 		gameTimer = 0;
 		timerText.text = "000.000";
 
-		pauseLayer.alpha = 0;
+		pauseLayer.setVisible(false);
 		gameOverLayer.alpha = 0;
 
 		//var tp = getPointInsideLevel(game.Target.SPAWNBUFFER * backgroundImage.scaleX);
@@ -338,16 +398,86 @@ class Game extends hxd.App {
 		//target.y = tp.y;
 		target.reset();
 
+		sawgenOverlay.reset();
+
+		deadHumans = [];
+		currentScoreBoard.removeChildren();
+
 		executeGeneration();
 	}
 
 	private function gameOver() {
-		pauseLayer.alpha = 0;
+		pauseLayer.setVisible(false);
 		gameOverLayer.alpha = 1;
+
+		var newScores : Array<game.GenerationState.Score> = [];
+
+		for (s in deadHumans) {
+			newScores.push({
+				value : s.time,
+				ai : s.p1 == true || s.p2 == true ? false : true,
+			});
+		}
+
+		// checks if we were using a current pattern
+		if (lastGenerationState.isRoomAPlayer == false) {
+			var currentPattern = lastGenerationState.patternSets[lastGenerationState.activePattern];
+
+			for (s in newScores) { currentPattern.scores.push(s); }
+			
+			haxe.ds.ArraySort.sort(currentPattern.scores, (a,b) -> sn.Math.sign(b.value-a.value));
+			
+			if (currentPattern.scores.length > SCORECOUNTLIMIT) {
+
+				while(currentPattern.scores.length > SCORECOUNTLIMIT) {
+					currentPattern.scores.pop();
+				}
+			}
+
+		} else {
+			// trims the scores if too many are stored.
+			if (newScores.length > SCORECOUNTLIMIT) {
+				haxe.ds.ArraySort.sort(newScores, (a,b) -> sn.Math.sign(b.value-a.value));
+
+				while(newScores.length > SCORECOUNTLIMIT) {
+					newScores.pop();
+				}
+			}
+
+			// saves the current pattern and the current score.
+			lastGenerationState.patternSets.push({
+				hash : game.GenerationState.generateHash(),
+				scores : newScores,
+				pattern : sawgenOverlay.pattern,
+				user : true,
+			});
+
+			// sets the active pattern to the one just made.
+			lastGenerationState.activePattern = lastGenerationState.patternSets.length - 1;
+		}
+
+		saveData();
 	}
 
 	////////////////////////////////////////////////////////////////////////////////////////
 	// UI RELATED FUNCTIONS.
+
+	private function updateCurrentScoreboard() {
+		currentScoreBoard.removeChildren();
+
+		haxe.ds.ArraySort.sort(deadHumans, (a,b) -> sn.Math.sign(b.time - a.time));
+
+		var y = 10;
+		for (a in deadHumans) {
+			var text = new h2d.Text(Fonts.timer, currentScoreBoard);
+			text.y = y;
+			text.color = a.color;
+			text.text = '${Math.floor(a.time*1000)/1000}';
+			text.dropShadow = { dx : 0, dy : 1, color : 0xFFFFFF, alpha: 0.7 };
+			text.setScale(2);
+			y += 45;
+		}
+	}
 
 	private function resizeUi() {
 		var window = hxd.Window.getInstance();
@@ -443,6 +573,22 @@ class Game extends hxd.App {
 		var i = humans.length - 1;
 		while(i >= 0) {
 			if (humans[i].queueForDeletion || force) {
+
+				if (force == false) {
+					// if we are removing the human because they lost, we should save their score.
+					
+					var color = if (humans[i].humanPlayer) { humans[i].humanColor; } else { new h3d.Vector(1,1,1); }
+					
+					deadHumans.push({
+						time : gameTimer,
+						p1 : humans[i].humanPlayer && humans[i].humanPlayerNumber == 1 ? true : false,
+						p2 : humans[i].humanPlayer && humans[i].humanPlayerNumber == 2 ? true : false,
+						color : color,
+					});
+
+					updateCurrentScoreboard();
+				}
+
 				humanLayer.removeChild(humans[i]);
 				humans.remove(humans[i]);
 			}
@@ -540,6 +686,8 @@ class Game extends hxd.App {
 		#end
 	}
 
+	#if debug
+
 	/**
 	 * [**DEBUG FUNCTION**] used to draw the background boundary overlay.
 	 */
@@ -572,6 +720,8 @@ class Game extends hxd.App {
 
 	}
 
+	#end
+
 	////////////////////////////////////////////////////////////////////////////////////////
 	// static initalizing functions.
 
@@ -591,5 +741,20 @@ class Game extends hxd.App {
 
 		// loads the castledb resource file.
 		Data.load(hxd.Res.data.entry.getText());
+	}
+
+	private function saveData() {
+		// we save all the data
+		var stringify = haxe.Json.stringify(lastGenerationState.patternSets);
+
+		#if js
+
+		var storage = js.Browser.getLocalStorage();
+		storage.setItem("savedata",stringify);	
+
+		#else
+		// how do we save this if we aren't in javascript???
+
+		#end
 	}
 }

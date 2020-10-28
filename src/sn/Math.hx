@@ -27,4 +27,14 @@ class Math {
 
 		return angle;
 	}
+
+	public static function sign(a : Float) : Int {
+		if (a > 0) {
+			return 1;
+		} else if (a < 0) {
+			return -1;
+		} else {
+			return 0;
+		}
+	}
 }

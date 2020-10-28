@@ -22,7 +22,7 @@ class Gameover extends h2d.Object {
 		};
 
 		restartText = new h2d.Text(Fonts.timer, this);
-		restartText.text = "\"R\" to restart.\n\"C\" to select role.";
+		restartText.text = "\"R\" to restart.";
 		restartText.textAlign = Center;
 		restartText.dropShadow = { 
 			dx : 0,
