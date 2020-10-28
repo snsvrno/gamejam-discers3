@@ -1,7 +1,7 @@
 package game;
 
 enum State {
-	SpawnWait; Active;
+	SpawnWait; Active; Dead;
 }
 
 enum Wall { 
@@ -10,7 +10,11 @@ enum Wall {
 
 class Saw extends h2d.Object {
 
-	private inline static var FANANGLE : Float = 45 / 180 * 3.14;
+	private inline static var SPAWNCOLLIDEDELAY : Float = 0.25;
+	private inline static var LAZYDURATIONMAX : Float = 1;
+	private inline static var LAZYDURATIONMIN : Float = 0.5;
+	private inline static var LAZYDURATIONFREQ : Float = 1;
+	private inline static var FANANGLE : Float = 15 / 180 * 3.14;
 
 	/**
 	 * The period of time where the saw is inactive, and doesn't do anything.
@@ -66,6 +70,14 @@ class Saw extends h2d.Object {
 	private var direction : { x : Float, y : Float } = { x : 0, y : 0 };
 	private var movementSpeed : Float;
 
+	private var lazyMode : Bool = false;
+	private var lazyModeToggle : Bool = true;
+
+	/**
+	 * switch to prevent this saw from making other saws.
+	 */
+	private var preventSpawning : Bool = false;
+
 	/**
 	 * The radius when bouncing and stuff, not for game objects
 	 */
@@ -88,7 +100,7 @@ class Saw extends h2d.Object {
 	 */
 	public var queueForDeletion(default, null) : Bool = false;
 
-	public function new(type : Data.BladesKind, x : Float, y : Float, s : Float, edges  : Game.Edges, ?parent : h2d.Object) {
+	public function new(type : Data.BladesKind, x : Float, y : Float, s : Float, edges  : Game.Edges, ?parent : h2d.Object, ?skipSpawn : Bool = false) {
 		super(parent);
 
 		// loads the blade definition from the `cdb`
@@ -124,8 +136,18 @@ class Saw extends h2d.Object {
 		sprite.x = -t.width/2;
 		sprite.y = -t.height/2;
 
-		setSpawnState();
-		timerQue.push(new sn.Timer(spawnWait, leaveSpawnState));
+		// attempting to fix the bug where it spawns everything forever.
+		preventSpawning = true;
+		timerQue.push(new sn.Timer(SPAWNCOLLIDEDELAY, function() {
+			preventSpawning = false;
+		}));
+
+		if (skipSpawn) {
+			leaveSpawnState();
+		} else {
+			setSpawnState();
+			timerQue.push(new sn.Timer(spawnWait, leaveSpawnState));
+		}
 	}
 
 	public function update(dt : Float) {
@@ -139,6 +161,32 @@ class Saw extends h2d.Object {
 				case Straight:
 					x += direction.x * movementSpeed * dt * scaleX;
 					y += direction.y * movementSpeed * dt * scaleY;
+
+				case Lazy(stength):
+
+					if (lazyMode) {
+						x += direction.x * movementSpeed * dt * scaleX * stength;
+						y += direction.y * movementSpeed * dt * scaleY * stength;
+					} else {
+						x += direction.x * movementSpeed * dt * scaleX;
+						y += direction.y * movementSpeed * dt * scaleY;
+					}
+
+					if (lazyModeToggle) {
+						lazyModeToggle = false;
+						lazyMode = !lazyMode;
+
+						if (lazyMode) {
+							timerQue.push(new sn.Timer(LAZYDURATIONMIN + Math.random() * LAZYDURATIONMAX, function() {
+								lazyModeToggle = true;
+							}));
+						} else {
+							timerQue.push(new sn.Timer(LAZYDURATIONFREQ, function() {
+								lazyModeToggle = true;
+							}));
+
+						}
+					}
 
 				case unknown:
 					trace('unplemented movement behavior $unknown');
@@ -203,6 +251,9 @@ class Saw extends h2d.Object {
 
 	public function wallCollisionCheck(walls : { left : Float, top : Float, right : Float, bottom : Float}) {
 
+		// attempting to stop crazy spawning bug.
+		if (state == Dead) { return; }
+
 		var impact : Null<Wall> = null;
 		var point : Null<{ x : Float, y : Float }> = null;
 
@@ -233,22 +284,38 @@ class Saw extends h2d.Object {
 			switch(wallCollisionBehavior) {
 				case Bounce: wallCollisionBounce(impact);
 				case Dispose: wallCollisionDispose(impact);
-				case Spawn(kind, count):
-					for (i in 0 ... count) {
-						var s = new game.Saw(kind.name, x, y, scaleX / baseScale, boundGrid);
-						newSaws.push(s);
-						s.direction.x = direction.x * -1;
-						s.direction.y = direction.y * -1;
-						
-						if (i > 0) {
-							if (i % 2 == 1) {
-								s.rotateDirection(FANANGLE / i);
-							} else {
-								s.rotateDirection(-FANANGLE / (i-1));
+				case Spawn(kind, count, dispose):
+					if (!preventSpawning) {
+						for (i in 0 ... count) {
+							var s = new game.Saw(kind.name, x, y, scaleX / baseScale, boundGrid, null, true);
+							newSaws.push(s);
+							s.direction.x = direction.x * -1;
+							s.direction.y = direction.y * -1;
+							
+							if (i > 0) {
+								if (i % 2 == 1) {
+									s.rotateDirection(FANANGLE / i);
+								} else {
+									s.rotateDirection(-FANANGLE / (i-1));
+								}
 							}
+							s.addRandomSpin();
 						}
+
+					
+						// makes it so that we can't immediately create another saw, attempting to
+						// fix a bug where we get stuck in a recursive spawning situation.
+						preventSpawning = true;
+						timerQue.push(new sn.Timer(SPAWNCOLLIDEDELAY, function() {
+							preventSpawning = false;
+						}));
 					}
-					wallCollisionDispose(impact);
+
+					if (dispose) {
+						wallCollisionDispose(impact);
+					} else {
+						wallCollisionBounce(impact);
+					}
 				case unknown:
 					trace('unhandled wall collision behavior: $unknown');
 			}
@@ -285,6 +352,7 @@ class Saw extends h2d.Object {
 	 */
 	private function wallCollisionDispose(wall : Wall) {
 		this.queueForDeletion = true;
+		this.state = Dead;
 	}
 
 	private function addRandomSpin() {

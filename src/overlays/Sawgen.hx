@@ -181,6 +181,7 @@ class Sawgen extends h2d.Object {
 		}
 	
 		aiPatternPosition = 0;
+		aiPatternTimer = 0;
 		
 	}
 

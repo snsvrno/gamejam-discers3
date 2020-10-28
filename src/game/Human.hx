@@ -247,35 +247,6 @@ class Human extends h2d.Object {
 			direction.y = directionY / dist;
 		}
 
-/*
-		var count : Int = 0;
-		var x : Float = 0;
-		var y : Float = 0;
-
-		while(avoidThesePoints.length > 0) {
-			var point = avoidThesePoints.pop();
-			var distance = sn.Math.distance(point.x - this.x, point.y - this.y);
-
-			if (distance <= vision * scaleX) {
-				x += point.x;
-				y += point.y;
-				count += 1;
-			}
-		}
-
-		if (count > 0) {
-
-			// the target point
-			x = x / count;
-			y = y / count;
-
-			var newDirection = sn.Math.direction(this.x - x,this.y - y);
-			direction.x = newDirection.x;
-			direction.y = newDirection.y;
-		} else {
-			direction.x = 0;
-			direction.y = 0;
-		}*/
 	}
 
 	private function loadAnimations(actor : Data.HumansKind) : Void {

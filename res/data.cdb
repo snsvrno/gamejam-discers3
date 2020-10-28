@@ -66,7 +66,7 @@
 					"collision": {
 						"fleshy": 5,
 						"walls": 7,
-						"randomness": 0
+						"randomness": 0.1
 					},
 					"behavior": {
 						"wallCollision": [
@@ -100,7 +100,8 @@
 						"wallCollision": [
 							1,
 							"fractured",
-							4
+							4,
+							true
 						],
 						"movement": [
 							0
@@ -118,8 +119,8 @@
 					"name": "fractured",
 					"spawnable": false,
 					"collision": {
-						"fleshy": 0,
-						"walls": 0,
+						"fleshy": 5,
+						"walls": 7,
 						"randomness": 0
 					},
 					"scale": 0.25,
@@ -146,6 +147,109 @@
 						"y": 0
 					},
 					"description": "the Shrapnel"
+				},
+				{
+					"name": "big",
+					"description": "Big Saw",
+					"spawnable": true,
+					"collision": {
+						"fleshy": 5,
+						"walls": 7,
+						"randomness": 0.3
+					},
+					"scale": 2,
+					"spawn": {
+						"wait": 2,
+						"transparency": 0.25
+					},
+					"speeds": {
+						"move": 10,
+						"rotation": 3
+					},
+					"behavior": {
+						"wallCollision": [
+							0
+						],
+						"movement": [
+							0
+						]
+					},
+					"sprite": {
+						"file": "player-disc.png",
+						"size": 16,
+						"x": 0,
+						"y": 0
+					}
+				},
+				{
+					"name": "star",
+					"description": "Starblade",
+					"spawnable": true,
+					"collision": {
+						"fleshy": 11,
+						"walls": 15,
+						"randomness": 0.65
+					},
+					"scale": 0.65,
+					"spawn": {
+						"wait": 2,
+						"transparency": 0.15
+					},
+					"speeds": {
+						"move": 60,
+						"rotation": 2
+					},
+					"behavior": {
+						"wallCollision": [
+							0
+						],
+						"movement": [
+							1,
+							0.5
+						]
+					},
+					"sprite": {
+						"file": "starblades.png",
+						"size": 32,
+						"x": 0,
+						"y": 0
+					}
+				},
+				{
+					"name": "hydra",
+					"description": "Hydra Saw",
+					"spawnable": true,
+					"collision": {
+						"fleshy": 5,
+						"walls": 7,
+						"randomness": 0.1
+					},
+					"scale": 0.5,
+					"spawn": {
+						"wait": 2,
+						"transparency": 0.5
+					},
+					"speeds": {
+						"move": 120,
+						"rotation": 5
+					},
+					"behavior": {
+						"wallCollision": [
+							1,
+							"hydra",
+							2,
+							true
+						],
+						"movement": [
+							0
+						]
+					},
+					"sprite": {
+						"file": "lil-disc.png",
+						"size": 16,
+						"x": 0,
+						"y": 0
+					}
 				}
 			],
 			"separators": [],
@@ -766,6 +870,10 @@
 						{
 							"name": "count",
 							"typeStr": "3"
+						},
+						{
+							"name": "dispose",
+							"typeStr": "2"
 						}
 					]
 				},
@@ -781,6 +889,15 @@
 				{
 					"name": "Straight",
 					"args": []
+				},
+				{
+					"name": "Lazy",
+					"args": [
+						{
+							"name": "slow",
+							"typeStr": "4"
+						}
+					]
 				},
 				{
 					"name": "SineWave",

@@ -386,6 +386,7 @@ class Game extends hxd.App {
 	private function restart() {
 		removeSaws(true);
 		removeHumans(true);
+		trace(humans.length);
 
 		gameTimer = 0;
 		timerText.text = "000.000";
@@ -514,9 +515,13 @@ class Game extends hxd.App {
 		while(i >= 0) {
 			if (saws[i].queueForDeletion || forced) {
 
-				for (ns in saws[i].newSaws) {
-					sawLayer.addChild(ns);
-					saws.push(ns);
+				// skip adding new saws from destroying because
+				// we are restarting the game.
+				if(!forced) {
+					for (ns in saws[i].newSaws) {
+						sawLayer.addChild(ns);
+						saws.push(ns);
+					}
 				}
 
 				sawLayer.removeChild(saws[i]);

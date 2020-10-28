@@ -305,9 +305,9 @@ class Pause extends h2d.Object {
 		restartWithSettingsButtonText.textAlign = Right;
 		restartWithSettingsButtonText.x = -10;
 		restartWithSettingsButtonText.y = -10 - Fonts.timer.lineHeight;
-		var interactiveRestart = new h2d.Interactive(300, 100, restartWithSettingsButtonText);
+		var interactiveRestart = new h2d.Interactive(300, 30, restartWithSettingsButtonText);
 		interactiveRestart.x = -300;
-		interactiveRestart.y = -50;
+		interactiveRestart.y = 0;
 		interactiveRestart.onClick = function (e : hxd.Event) { 
 			newSettingsReady = true;
 		};
@@ -469,10 +469,10 @@ class Pause extends h2d.Object {
 		aiHumansBox.y = 10 * 2 + 75 * 2;
 
 		roomController.x = window.width;
-		roomController.y = 10 * 3 + 75 * 3;
+		roomController.y = 10 * 3 + 75 * 3 - 25;
 
-		roomPattern.x = window.width - 200;
-		roomPattern.y = 10;
+		roomPattern.x = 10 + 175;
+		roomPattern.y = 150;
 
 		restartWithSettingsButton.x = window.width;
 		restartWithSettingsButton.y = window.height;
